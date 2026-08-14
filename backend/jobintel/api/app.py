@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from jobintel.api.schemas import JobCreate, JobUpdate, ProgressIn, ProspectCreate, ProspectUpdate
 from jobintel.config import Settings, get_settings
@@ -14,6 +17,10 @@ from jobintel.db import get_store as build_store
 from jobintel.models import Job, JobStatus, ProgressEntityType, Prospect, ProspectStatus
 
 app = FastAPI(title="Job Intelligence Tracker", version="0.1.0")
+
+# backend/jobintel/api/app.py -> parents[3] = repo root
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_FRONTEND_DIST = _REPO_ROOT / "frontend" / "dist"
 
 
 def _configure_cors(application: FastAPI, settings: Settings) -> None:
@@ -208,3 +215,28 @@ def list_progress(
         limit=limit,
     )
     return [event.model_dump(mode="json") for event in events]
+
+
+def _mount_frontend() -> None:
+    """Serve the Vue build from FastAPI on Vercel (single entrypoint)."""
+    if not _FRONTEND_DIST.is_dir():
+        return
+    assets = _FRONTEND_DIST / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
+
+    @app.get("/")
+    def spa_root() -> FileResponse:
+        return FileResponse(_FRONTEND_DIST / "index.html")
+
+    @app.get("/{full_path:path}")
+    def spa_fallback(full_path: str) -> FileResponse:
+        if full_path == "api" or full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        candidate = _FRONTEND_DIST / full_path
+        if candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(_FRONTEND_DIST / "index.html")
+
+
+_mount_frontend()

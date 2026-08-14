@@ -34,6 +34,9 @@ packages = ["backend/jobintel"]
 [tool.hatch.build.targets.wheel.force-include]
 "backend/jobintel/collectors/boards.yaml" = "jobintel/collectors/boards.yaml"
 
+[tool.vercel]
+entrypoint = "backend.jobintel.api.app:app"
+
 [tool.uv]
 package = true
 
