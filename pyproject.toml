@@ -37,6 +37,9 @@ packages = ["backend/jobintel"]
 [tool.vercel]
 entrypoint = "backend.jobintel.api.app:app"
 
+[tool.vercel.scripts]
+build = "cd frontend && npm ci && npm run build && rm -rf public && mkdir -p public && cp -R frontend/dist/. public/"
+
 [tool.uv]
 package = true
 

@@ -21,6 +21,7 @@ app = FastAPI(title="Job Intelligence Tracker", version="0.1.0")
 # backend/jobintel/api/app.py -> parents[3] = repo root
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _FRONTEND_DIST = _REPO_ROOT / "frontend" / "dist"
+_PUBLIC_DIR = _REPO_ROOT / "public"
 
 
 def _configure_cors(application: FastAPI, settings: Settings) -> None:
@@ -219,24 +220,25 @@ def list_progress(
 
 def _mount_frontend() -> None:
     """Serve the Vue build from FastAPI on Vercel (single entrypoint)."""
-    if not _FRONTEND_DIST.is_dir():
+    static_dir = _PUBLIC_DIR if (_PUBLIC_DIR / "index.html").is_file() else _FRONTEND_DIST
+    if not static_dir.is_dir() or not (static_dir / "index.html").is_file():
         return
-    assets = _FRONTEND_DIST / "assets"
+    assets = static_dir / "assets"
     if assets.is_dir():
         app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
 
     @app.get("/")
     def spa_root() -> FileResponse:
-        return FileResponse(_FRONTEND_DIST / "index.html")
+        return FileResponse(static_dir / "index.html")
 
     @app.get("/{full_path:path}")
     def spa_fallback(full_path: str) -> FileResponse:
         if full_path == "api" or full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="Not found")
-        candidate = _FRONTEND_DIST / full_path
+        candidate = static_dir / full_path
         if candidate.is_file():
             return FileResponse(candidate)
-        return FileResponse(_FRONTEND_DIST / "index.html")
+        return FileResponse(static_dir / "index.html")
 
 
 _mount_frontend()
