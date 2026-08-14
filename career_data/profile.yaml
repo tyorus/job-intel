@@ -1,0 +1,22 @@
+# Identity — sources: LinkedIn + tyorus.com (2026-08-11 browser review)
+full_name: Suwignyo Prasetyo
+preferred_name: Tyo
+headline: "Metocean Data Engineer | Backend Developer | AI Automation Workflow"
+location: Jakarta, Indonesia
+email: tyo.suwignyo@gmail.com
+website: https://tyorus.com/
+linkedin: https://www.linkedin.com/in/tyo-suwignyo/
+github: https://github.com/tyorus
+resume_pdf: https://tyorus.com/files/suwignyo-prasetyo-resume.pdf
+open_to:
+  - Data Engineer
+  - Python Developer
+  - Automation Engineer
+  - Back End Developer
+  - Data Analyst
+summary: >
+  Data engineer building reliable production pipelines, data platforms, and
+  workflow automation. Production data engineering (ingestion, transformation,
+  QC, orchestration, delivery), backend & workflow automation (Python, Prefect,
+  Linux, Docker, S3-compatible storage, Zarr, HPC), and geospatial/metocean
+  systems (numerical model data, forecast production, model verification).

@@ -1,0 +1,23 @@
+# Public job boards for hourly GitHub Actions scrape.
+# Add greenhouse board tokens or Lever company slugs without changing code.
+# LinkedIn is intentionally absent — paste those jobs manually in the tracker.
+
+greenhouse:
+  - gitlab
+  - stripe
+  - figma
+  - notion
+  - databricks
+  - cloudflare
+  - hashicorp
+  - snowflake
+
+lever:
+  - netlify
+  - palantir
+  - grafana
+  - duckduckgo
+
+rss:
+  - https://weworkremotely.com/categories/remote-programming-jobs.rss
+  - https://weworkremotely.com/categories/remote-devops-sysadmin-jobs.rss

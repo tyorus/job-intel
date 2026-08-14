@@ -1,0 +1,61 @@
+# Achievements — certifications, awards, languages from LinkedIn (facts only)
+# Note: LinkedIn shows 8 licenses; only credentialed entries visible during review
+# are listed here. Do not invent missing certs.
+achievements:
+  - id: cert_dicoding_ml_beginner
+    kind: certification
+    title: Belajar Machine Learning untuk Pemula
+    issuer: Dicoding Indonesia
+    issued_on: "2026-05"
+    expires_on: "2029-05"
+    credential_id: 6RPN79LN8X2M
+    tags: [machine-learning, python, certification]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: cert_dicoding_aws_genai
+    kind: certification
+    title: Belajar Dasar Cloud dan Gen AI di AWS
+    issuer: Dicoding Indonesia
+    issued_on: "2026-05"
+    expires_on: "2029-05"
+    credential_id: 4EXG1O4EGPRL
+    tags: [aws, generative-ai, cloud, certification]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: award_otga_altimetry_trainer
+    kind: award
+    title: >
+      Trainer in the International Training Course on the Implementation of
+      Satellite Altimetry Data for Operational Metocean Services
+    issuer: BMKG x OTGA
+    issued_on: "2024-11"
+    description: >
+      Guiding participants to process and analyse Satellite Altimetry datasets,
+      especially from Marine Copernicus database for operational metocean service
+      purposes.
+    tags: [training, satellite, altimetry, metocean]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: award_ai_datathon_2024
+    kind: award
+    title: 2024 AI Datathon Finalist
+    issuer: BMKG x KORIKA
+    issued_on: "2024-08"
+    description: >
+      Utilizing ConvLSTM to predict coastal floods in Semarang region.
+    tags: [ml, convlstm, datathon, coastal]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: lang_indonesian
+    kind: language
+    title: Bahasa Indonesia
+    proficiency: Native or bilingual proficiency
+    tags: [language]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: lang_english
+    kind: language
+    title: English
+    proficiency: Professional working proficiency (IELTS 6.5)
+    tags: [language, english, ielts]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]

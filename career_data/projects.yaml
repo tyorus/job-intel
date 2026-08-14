@@ -1,0 +1,115 @@
+# Projects — LinkedIn MMS write-ups + tyorus.com/projects
+projects:
+  - id: mms_phase_ii
+    name: Marine Meteorology System (MMS) Phase II
+    summary: >
+      Big Data & AI technical team member developing machine learning models and
+      high-resolution numerical simulations for predictive metocean applications
+      at BMKG.
+    start_date: "2025-01"
+    end_date: null
+    associated_with: Indonesian Agency for Meteorology, Climatology, and Geophysics (BMKG)
+    include_in_default_resume: true
+    tags: [mms, ml, hpc, metocean, hindcast]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+    bullets:
+      - id: mms2_convlstm_hf
+        text: >
+          Implementing Convolutional LSTM (Conv-LSTM) algorithms for
+          spatial-temporal void filling and forecasting of High-Frequency (HF)
+          Radar surface current data.
+        tags: [convlstm, ml, hf-radar, metocean]
+      - id: mms2_lisflood
+        text: >
+          Assisting in the development of operational coastal inundation models
+          using the LISFLOOD framework.
+        tags: [lisflood, coastal, modeling]
+      - id: mms2_hindcast_30y
+        text: >
+          Executing a 30-year (1995-2025) INACAWO hindcast simulation to compute
+          extreme metocean conditions as inputs for coastal flood prediction models.
+        tags: [hindcast, inacawo, extreme-value]
+      - id: mms2_hpc_training
+        text: >
+          Completed a 2-week advanced HPC site training led by Atos Eviden, and a
+          1-week specialized INACAWO Hindcast and simulation training.
+        tags: [hpc, training]
+
+  - id: mms_phase_i
+    name: Marine Meteorology System (MMS) Phase I
+    summary: >
+      Technical team / Metocean Data Engineer supporting operational metocean IT
+      infrastructure and end-to-end data pipelines from observation to forecasting.
+    start_date: "2023-09"
+    end_date: "2025-12"
+    associated_with: Indonesian Agency for Meteorology, Climatology, and Geophysics (BMKG)
+    include_in_default_resume: true
+    tags: [mms, data-lake, hpc, jupyterhub]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+    bullets:
+      - id: mms1_hpc_drc
+        text: >
+          Supported the deployment and operationalization of the main Data Center
+          and the HPC Disaster Recovery Center (DRC) in Bali.
+        tags: [hpc, drc, infrastructure]
+      - id: mms1_mandala
+        text: >
+          Assisted in building Mandala (Marine Data Lake), a centralized data lake
+          designed to archive INACAWO numerical model forecasts and integrate
+          real-time observational data, including MAWS, floats, drifters, and HF radar.
+        tags: [data-lake, mandala, observations]
+      - id: mms1_jupyterhub
+        text: >
+          Facilitated the setup of a JupyterHub-based platform to streamline
+          metocean data analysis and exploration for internal stakeholders.
+        tags: [jupyterhub, analysis-platform]
+      - id: mms1_sat
+        text: >
+          Conducted Site Acceptance Testing (SAT) for both the INACAWO operational
+          model and the HPC DRC infrastructure in Bali to verify operational readiness.
+        tags: [sat, testing, inacawo]
+      - id: mms1_vendor_coord
+        text: >
+          Maintained routine technical coordination with third-party vendors and
+          external partners to ensure smooth day-to-day system operations.
+        tags: [operations, coordination]
+      - id: mms1_training_toulouse
+        text: >
+          Completed specialized technical training, including a 2-week Numerical
+          Modeling & HPC program in Toulouse (France), MAWS observational training,
+          and IT DRC operations training in Bali.
+        tags: [training, hpc, france]
+
+  - id: ops_intelligence_brief
+    name: Operational Intelligence Brief
+    summary: >
+      Turn Ads + CRM + ops sheets into a weekly narrative brief with anomaly flags
+      and email/Slack delivery — production DE patterns applied to agency ops.
+    url: https://tyorus.com/projects/automated-reporting
+    include_in_default_resume: true
+    tags: [python, automation, agency, reporting, streamlit]
+    source_urls: [https://tyorus.com/projects/]
+    bullets:
+      - id: ops_brief_pipeline
+        text: >
+          Built an automation workflow that ingests Ads, CRM, and ops sheet exports,
+          performs data readiness checks, flags anomalies, generates a written
+          narrative brief, and delivers to email/Slack.
+        tags: [python, automation, anomaly-detection, reporting]
+
+  - id: ww3_inawaves_drc_benchmark
+    name: InaWaves / WW3 Performance Benchmark on BMKG DRC
+    summary: >
+      WAVEWATCH III / InaWaves performance benchmark on BMKG DRC Bali covering
+      MPI/OMPG/OMPH resource optimization versus legacy HPC.
+    url: https://tyorus.com/projects/ww3-benchmark
+    include_in_default_resume: true
+    tags: [ww3, inawaves, hpc, benchmark, ocean, bmkg]
+    source_urls: [https://tyorus.com/projects/]
+    bullets:
+      - id: ww3_benchmark_mpi
+        text: >
+          Benchmarked WAVEWATCH III / InaWaves performance on BMKG DRC Bali across
+          MPI/OMPG/OMPH configurations, identifying resource-optimal setups and
+          comparing results with legacy HPC.
+        tags: [ww3, hpc, mpi, benchmarking]

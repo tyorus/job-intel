@@ -1,0 +1,203 @@
+# Experiences — tyorus.com/resume (canonical DE bullets) + LinkedIn enrichment
+experiences:
+  - id: bmkg_metocean_de
+    company: Indonesian Agency for Meteorology, Climatology, and Geophysics (BMKG)
+    role: Metocean Data Engineer
+    start_date: "2023-09"
+    end_date: null
+    location: Jakarta, Indonesia
+    employment_type: full-time
+    remote_type: hybrid
+    include_in_default_resume: true
+    tags: [data-engineering, metocean, production, hpc]
+    source_urls:
+      - https://tyorus.com/resume/
+      - https://www.linkedin.com/in/tyo-suwignyo/
+    bullets:
+      - id: bmkg_de_ofs_pipelines
+        text: >
+          Engineer and operate production data pipelines supporting BMKG ocean
+          forecasting systems, including atmospheric, wave, and ocean-model
+          workflows used for real-time marine forecasting.
+        tags: [python, etl, data-engineering, production, metocean]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_de_automation_hpc
+        text: >
+          Build automated ingestion, validation, transformation, post-processing,
+          and dissemination workflows for large numerical and geospatial datasets
+          using Python, Prefect, Linux, and HPC infrastructure.
+        tags: [python, prefect, linux, hpc, etl, qc]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_de_model_workflows
+        text: >
+          Operate and improve production workflows for INACAWO, INAWAVES, and
+          INAFLOWS across numerical weather, wave, and ocean circulation models.
+        tags: [inacawo, inawaves, inaflows, production, metocean]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_de_orchestration
+        text: >
+          Develop workflow orchestration and automation across distributed
+          environments using Prefect, Docker, SLURM, and object storage.
+        tags: [prefect, docker, slurm, s3, orchestration]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_de_hpc_optimize
+        text: >
+          Optimize scientific computing workloads and model post-processing
+          pipelines, including HPC benchmarking, parallel execution, and
+          production reliability improvements.
+        tags: [hpc, benchmarking, performance, production]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_de_mms_bigdata
+        text: >
+          Contribute to Marine Meteorology System (MMS) initiatives as a Big Data
+          & AI Engineer, supporting data architecture, operational services, and
+          marine data dissemination.
+        tags: [mms, big-data, ai, architecture]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_de_l2_l3_support
+        text: >
+          Perform L2 and L3 troubleshooting for operational forecasting systems,
+          data pipelines, and production services to ensure high availability and
+          operational stability.
+        tags: [operations, troubleshooting, production]
+        source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+      - id: bmkg_de_zarr_hindcast
+        text: >
+          Develop cloud-optimized climatological and hindcast datasets using Zarr
+          and S3-compatible object storage to support scalable geospatial data
+          access, efficient archival, hindcast and time-series analysis.
+        tags: [zarr, s3, hindcast, geospatial, time-series]
+        source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+      - id: bmkg_de_streamlit_apps
+        text: >
+          Develop Streamlit-based scientific applications for climatological data
+          processing, visualization, and operational monitoring to support
+          internal analysis and decision-making.
+        tags: [streamlit, visualization, python]
+        source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+      - id: bmkg_de_drc_sat
+        text: >
+          Design backup forecasting systems on the HPC Disaster Recovery Center
+          (DRC), including Site Acceptance Testing (SAT), performance
+          benchmarking, and scalability testing for Ocean Wave Modeling
+          (WAVEWATCH III & SWAN) workloads.
+        tags: [hpc, drc, sat, ww3, swan, benchmarking]
+        source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: bmkg_marine_meteorologist
+    company: Indonesian Agency for Meteorology, Climatology, and Geophysics (BMKG)
+    role: Marine Meteorologist
+    start_date: "2023-02"  # tyorus.com/resume; LinkedIn lists Jan 2023 — see SOURCES.md
+    end_date: "2023-09"
+    location: Jakarta, Indonesia
+    employment_type: full-time
+    remote_type: onsite
+    include_in_default_resume: true
+    tags: [meteorology, forecasting, metocean]
+    source_urls:
+      - https://tyorus.com/resume/
+      - https://www.linkedin.com/in/tyo-suwignyo/
+    bullets:
+      - id: bmkg_mm_forecasts
+        text: >
+          Produced operational marine forecasts covering wind, waves, tides,
+          currents, and severe weather conditions for Indonesian waters.
+        tags: [forecasting, marine, metocean]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_mm_obs_nwp
+        text: >
+          Analyzed observational, satellite, and numerical weather prediction data
+          to evaluate forecast conditions and support operational decision-making.
+        tags: [nwp, data-analysis, satellite, verification]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_mm_verification
+        text: >
+          Performed model verification and interpreted meteorological and
+          oceanographic datasets for marine forecast guidance.
+        tags: [verification, qc, data-analysis]
+        source_urls: [https://tyorus.com/resume/]
+
+      - id: bmkg_mm_field_outreach
+        text: >
+          Conducted field observational campaigns, including ADCP surveys in
+          Jakarta Bay and the Jalacitra Expedition cruise 2023, and presented for
+          community capacity-building programs such as the Fishermen Weather
+          Field School.
+        tags: [fieldwork, outreach, adcp]
+        source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: fastwork_data_analyst
+    company: Fastwork Technologies Indonesia
+    role: Data Analyst
+    start_date: "2025-09"
+    end_date: "2025-11"
+    location: Remote
+    employment_type: freelance
+    remote_type: remote
+    include_in_default_resume: false
+    tags: [data-analysis, freelance, healthcare]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+    bullets:
+      - id: fastwork_ecg_hht
+        text: >
+          Conducted time-series analysis on electrocardiogram (ECG) data for a
+          healthcare-related client, applying the Hilbert–Huang Transform to
+          extract and interpret signal characteristics. Delivered the requested
+          analytical workflow and results in line with the client's technical
+          requirements.
+        tags: [python, time-series, signal-analysis, data-analysis]
+        source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: projects_co_student_mentor
+    company: Projects.co.id
+    role: Student Mentor
+    start_date: "2023-01"
+    end_date: "2023-07"
+    location: Remote
+    employment_type: part-time
+    remote_type: remote
+    include_in_default_resume: false
+    tags: [mentoring, education]
+    source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+    bullets:
+      - id: projects_co_tiu_videos
+        text: >
+          Created step-by-step video explanations for six CPNS Test Intelegensia
+          Umum (TIU) practice-test packages, covering 210 questions in total.
+          Explained the reasoning and concepts behind each solution to support
+          students' exam preparation.
+        tags: [communication, tutoring]
+        source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]
+
+  - id: career_break_voluntary
+    company: Voluntary work
+    role: Career break
+    start_date: "2022-09"
+    end_date: "2022-12"
+    location: Purworejo Regency, Central Java, Indonesia
+    employment_type: voluntary
+    remote_type: onsite
+    include_in_default_resume: false
+    tags: [career-break]
+    source_urls:
+      - https://tyorus.com/resume/
+      - https://www.linkedin.com/in/tyo-suwignyo/
+    bullets:
+      - id: career_break_family_farm
+        text: >
+          Voluntary work during a short career break after graduation; supported
+          family farming activities, primarily field and planting preparation,
+          before starting a professional role at BMKG.
+        tags: [career-break]
+        source_urls: [https://www.linkedin.com/in/tyo-suwignyo/]

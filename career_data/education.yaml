@@ -1,0 +1,27 @@
+# Education — tyorus.com/resume + LinkedIn
+education:
+  - id: stmkg_basc_meteorology
+    institution: State College of Meteorology Climatology and Geophysics (STMKG)
+    degree: Bachelor of Applied Science (BASc)
+    field: Meteorology
+    start_date: "2018-09"
+    end_date: "2022-09"
+    gpa: "3.70 / 4.00"
+    details:
+      - >
+        Bachelor thesis: Moistening Process of Cold Surge Propagation and Their
+        Effect on Moisture Budget over Western Maritime Continent (ERA5 2010–2019).
+      - >
+        Courses: Atmospheric Physics, Atmospheric Dynamics, Climate and Climate
+        Variability, Introduction to Oceanography, Numerical Methods, Numerical
+        Weather and Ocean Modelling, Operational Meteorology.
+      - >
+        Models experience: WRF, SWAN, Delft3D; visualization tools: NCL, GrADS,
+        ODV, IDV, Panoply.
+      - >
+        Activities: Scientific Research and Seminars, STMKG Bridge Club, Platoon
+        Commander.
+    tags: [meteorology, education, era5]
+    source_urls:
+      - https://tyorus.com/resume/
+      - https://www.linkedin.com/in/tyo-suwignyo/

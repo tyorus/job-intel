@@ -1,0 +1,212 @@
+# Skills taxonomy — tyorus.com/resume + LinkedIn top skills
+skills:
+  # --- Data Engineering ---
+  - id: skill_python
+    name: Python
+    category: Data Engineering
+    aliases: [python3, "python (programming language)"]
+    tags: [python, programming]
+
+  - id: skill_etl
+    name: ETL / ELT pipelines
+    category: Data Engineering
+    aliases: [etl, elt, data pipelines]
+    tags: [etl, data-engineering]
+
+  - id: skill_prefect
+    name: Prefect
+    category: Data Engineering
+    aliases: [prefect orchestration]
+    tags: [prefect, orchestration, workflow]
+
+  - id: skill_xarray
+    name: Xarray
+    category: Data Engineering
+    aliases: []
+    tags: [xarray, geospatial, scientific]
+
+  - id: skill_zarr
+    name: Zarr
+    category: Data Engineering
+    aliases: []
+    tags: [zarr, object-storage, scientific]
+
+  - id: skill_netcdf
+    name: NetCDF
+    category: Data Engineering
+    aliases: [netcdf4]
+    tags: [netcdf, scientific]
+
+  - id: skill_data_quality
+    name: Data quality & validation
+    category: Data Engineering
+    aliases: [qc, data quality control, validation]
+    tags: [qc, validation, data-quality]
+
+  - id: skill_timeseries_processing
+    name: Time-series processing
+    category: Data Engineering
+    aliases: [time series processing]
+    tags: [time-series, data-engineering]
+
+  # --- Data Analysis ---
+  - id: skill_pandas
+    name: Pandas
+    category: Data Analysis
+    aliases: []
+    tags: [pandas, data-analysis, python]
+
+  - id: skill_timeseries_analysis
+    name: Time-series analysis
+    category: Data Analysis
+    aliases: [time series analysis]
+    tags: [time-series, data-analysis]
+
+  - id: skill_eda
+    name: Exploratory data analysis
+    category: Data Analysis
+    aliases: [eda, exploratory analysis]
+    tags: [eda, data-analysis]
+
+  - id: skill_signal_analysis
+    name: Statistical / signal analysis
+    category: Data Analysis
+    aliases: [hilbert-huang, hilbert–huang transform, hht]
+    tags: [signal-analysis, data-analysis]
+    scope: freelance-scoped
+
+  - id: skill_visualization
+    name: Data visualization
+    category: Data Analysis
+    aliases: [scientific visualization, viz]
+    tags: [visualization, streamlit, data-analysis]
+
+  - id: skill_model_verification_analysis
+    name: Model verification / QC interpretation
+    category: Data Analysis
+    aliases: [model verification, forecast verification]
+    tags: [verification, qc, data-analysis]
+
+  - id: skill_data_analysis
+    name: Data Analysis
+    category: Data Analysis
+    aliases: [data analytics]
+    tags: [data-analysis]
+
+  # --- Platform & Backend ---
+  - id: skill_linux
+    name: Linux
+    category: Platform & Backend
+    aliases: []
+    tags: [linux, platform]
+
+  - id: skill_docker
+    name: Docker
+    category: Platform & Backend
+    aliases: [containers]
+    tags: [docker, containers]
+
+  - id: skill_aws
+    name: AWS
+    category: Platform & Backend
+    aliases: [amazon web services]
+    tags: [aws, cloud]
+
+  - id: skill_object_storage
+    name: Object storage / S3-compatible
+    category: Platform & Backend
+    aliases: [s3, s3-compatible storage, object storage]
+    tags: [s3, object-storage]
+
+  - id: skill_slurm
+    name: SLURM HPC
+    category: Platform & Backend
+    aliases: [slurm, hpc]
+    tags: [slurm, hpc]
+
+  - id: skill_apis
+    name: API & data dissemination
+    category: Platform & Backend
+    aliases: [apis, data dissemination]
+    tags: [api, dissemination]
+
+  - id: skill_bash
+    name: Bash
+    category: Platform & Backend
+    aliases: [bash shell, shell scripting]
+    tags: [bash, linux]
+
+  - id: skill_streamlit
+    name: Streamlit
+    category: Platform & Backend
+    aliases: []
+    tags: [streamlit, python, visualization]
+
+  - id: skill_workflow_orchestration
+    name: Workflow orchestration
+    category: Platform & Backend
+    aliases: [orchestration]
+    tags: [orchestration, workflow]
+
+  - id: skill_production_automation
+    name: Production automation
+    category: Platform & Backend
+    aliases: [automation]
+    tags: [automation, production]
+
+  # --- Geospatial & MetOcean ---
+  - id: skill_ww3
+    name: WAVEWATCH III
+    category: Geospatial & MetOcean
+    aliases: [ww3, wavewatch3, wavewatch iii]
+    tags: [ww3, metocean, modeling]
+
+  - id: skill_swan
+    name: SWAN
+    category: Geospatial & MetOcean
+    aliases: [simulating waves nearshore]
+    tags: [swan, metocean, modeling]
+
+  - id: skill_nwp
+    name: Numerical weather prediction
+    category: Geospatial & MetOcean
+    aliases: [nwp]
+    tags: [nwp, meteorology]
+
+  - id: skill_hindcast
+    name: Hindcast analysis
+    category: Geospatial & MetOcean
+    aliases: [hindcast]
+    tags: [hindcast, metocean]
+
+  - id: skill_model_verification
+    name: Model verification
+    category: Geospatial & MetOcean
+    aliases: []
+    tags: [verification, metocean]
+
+  - id: skill_marine_forecasting
+    name: Marine forecasting
+    category: Geospatial & MetOcean
+    aliases: [metocean forecasting]
+    tags: [forecasting, metocean]
+
+  - id: skill_geospatial
+    name: Geospatial data processing
+    category: Geospatial & MetOcean
+    aliases: [geospatial]
+    tags: [geospatial]
+
+  # --- Scoped / do not overclaim ---
+  - id: skill_convlstm
+    name: ConvLSTM
+    category: Data Analysis
+    aliases: [convolutional lstm, conv-lstm]
+    tags: [ml, convlstm]
+    scope: project-scoped
+
+  - id: skill_numerical_modeling
+    name: Numerical Modeling
+    category: Geospatial & MetOcean
+    aliases: [numerical modelling]
+    tags: [modeling, metocean]
