@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=str(_REPO_ROOT / ".env"),
         env_file_encoding="utf-8",
+        env_ignore_empty=True,
         extra="ignore",
     )
 
