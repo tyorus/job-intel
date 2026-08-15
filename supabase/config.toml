@@ -1,0 +1,10 @@
+# GitHub → Supabase integration reads this file. Keep it minimal so production
+# Auth/API settings are not overwritten by local-dev defaults.
+# https://supabase.com/docs/guides/local-development/cli/config
+project_id = "job-intel"
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+enabled = false
