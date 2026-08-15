@@ -292,6 +292,17 @@ button.danger {
   border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line));
 }
 
+button.row-action {
+  padding: 0.28rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.table td.actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -439,7 +450,7 @@ button.danger {
   cursor: pointer;
 }
 
-.clickable:hover td {
+.clickable:hover td:not(.actions) {
   color: var(--accent);
 }
 

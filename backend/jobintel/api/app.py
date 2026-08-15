@@ -132,6 +132,14 @@ def update_job(_: Auth, store: Db, job_id: UUID, body: JobUpdate) -> dict:
     return updated.model_dump(mode="json")
 
 
+@app.delete("/api/jobs/{job_id}", status_code=204)
+def delete_job(_: Auth, store: Db, job_id: UUID) -> None:
+    try:
+        store.delete_job(job_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Job not found") from exc
+
+
 @app.post("/api/jobs/{job_id}/progress", status_code=201)
 def job_progress(_: Auth, store: Db, job_id: UUID, body: ProgressIn) -> dict:
     try:

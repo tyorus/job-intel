@@ -165,6 +165,20 @@ class Store:
         names = self._company_map([str(row.get("company_id") or "")])
         return self._to_job_read(row, names.get(str(row.get("company_id") or "")))
 
+    def delete_job(self, job_id: UUID) -> None:
+        if not self.get_job(job_id):
+            raise KeyError(f"job not found: {job_id}")
+        job_key = str(job_id)
+        self.client.table("applications").delete().eq("job_id", job_key).execute()
+        (
+            self.client.table("progress_events")
+            .delete()
+            .eq("entity_type", "job")
+            .eq("entity_id", job_key)
+            .execute()
+        )
+        self.client.table("jobs").delete().eq("id", job_key).execute()
+
     def existing_job_keys(self) -> tuple[set[str], set[str]]:
         urls: set[str] = set()
         hashes: set[str] = set()

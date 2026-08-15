@@ -71,6 +71,16 @@ class FakeStore:
         self.jobs[job_id] = updated
         return updated
 
+    def delete_job(self, job_id: UUID) -> None:
+        if job_id not in self.jobs:
+            raise KeyError(job_id)
+        del self.jobs[job_id]
+        self.events = [
+            event
+            for event in self.events
+            if not (event.entity_type == ProgressEntityType.JOB and event.entity_id == job_id)
+        ]
+
     def submit_job_progress(
         self, job_id: UUID, status: JobStatus, note: str | None = None
     ) -> ProgressEvent:
@@ -262,6 +272,26 @@ def test_job_metadata_create_and_patch(client: TestClient) -> None:
     assert patched.status_code == 200
     assert patched.json()["seniority"] == "mid"
     assert patched.json()["deadline_at"].startswith("2026-08-25")
+
+
+def test_delete_job(client: TestClient) -> None:
+    created = client.post(
+        "/api/jobs",
+        headers=_auth(),
+        json={"title": "Drop me", "description": "Gone"},
+    )
+    job_id = created.json()["id"]
+    deleted = client.delete(f"/api/jobs/{job_id}", headers=_auth())
+    assert deleted.status_code == 204
+    missing = client.get(f"/api/jobs/{job_id}", headers=_auth())
+    assert missing.status_code == 404
+    listed = client.get("/api/jobs", headers=_auth())
+    assert all(row["id"] != job_id for row in listed.json())
+    missing_delete = client.delete(
+        "/api/jobs/00000000-0000-0000-0000-000000000000",
+        headers=_auth(),
+    )
+    assert missing_delete.status_code == 404
 
 
 def test_invalid_job_status(client: TestClient) -> None:

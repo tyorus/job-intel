@@ -302,6 +302,18 @@ class SqliteStore:
         assert updated is not None
         return updated
 
+    def delete_job(self, job_id: UUID) -> None:
+        if not self.get_job(job_id):
+            raise KeyError(f"job not found: {job_id}")
+        job_key = str(job_id)
+        self._conn.execute("delete from applications where job_id = ?", (job_key,))
+        self._conn.execute(
+            "delete from progress_events where entity_type = 'job' and entity_id = ?",
+            (job_key,),
+        )
+        self._conn.execute("delete from jobs where id = ?", (job_key,))
+        self._conn.commit()
+
     def existing_job_keys(self) -> tuple[set[str], set[str]]:
         urls = {str(row["url"]) for row in self._rows("select url from jobs where url is not null")}
         hashes = {

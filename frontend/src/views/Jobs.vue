@@ -141,6 +141,7 @@
               Status{{ sortMark(sortKey, "status", sortDir) }}
             </button>
           </th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -156,6 +157,17 @@
           </td>
           <td class="mono">{{ job.source }}</td>
           <td><StatusPill :value="job.status" /></td>
+          <td class="actions" @click.stop>
+            <button
+              v-if="job.status !== 'not_related'"
+              type="button"
+              class="danger row-action"
+              :disabled="marking.has(job.id)"
+              @click="markNotRelated(job)"
+            >
+              {{ marking.has(job.id) ? "Saving…" : "Not related" }}
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -186,6 +198,7 @@ const sortDir = ref("desc");
 const error = ref("");
 const formError = ref("");
 const showForm = ref(false);
+const marking = ref(new Set());
 const form = reactive({
   title: "",
   company_name: "",
@@ -243,6 +256,35 @@ async function load() {
       : rows.filter((job) => job.status !== "not_related");
   } catch (err) {
     error.value = err.message;
+  }
+}
+
+async function markNotRelated(job) {
+  const reason = window.prompt("Why is this not related? (optional)");
+  if (reason === null) return;
+  error.value = "";
+  marking.value = new Set(marking.value).add(job.id);
+  try {
+    await api(`/api/jobs/${job.id}/progress`, {
+      method: "POST",
+      body: JSON.stringify({
+        status: "not_related",
+        note: reason.trim() || "Marked not related",
+      }),
+    });
+    if (status.value === "not_related") {
+      jobs.value = jobs.value.map((row) =>
+        row.id === job.id ? { ...row, status: "not_related" } : row,
+      );
+    } else {
+      jobs.value = jobs.value.filter((row) => row.id !== job.id);
+    }
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    const next = new Set(marking.value);
+    next.delete(job.id);
+    marking.value = next;
   }
 }
 
