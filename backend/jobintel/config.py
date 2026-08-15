@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     tracker_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     scrape_keywords: str = (
         "python,data analyst,data engineer,data engineering,fastapi,etl,pandas,"
-        "sql,pipeline,metocean,ocean,analytics,data cleaning,data visualization"
+        "sql,pipeline,metocean,ocean,analytics,data cleaning,data visualization,automation"
     )
     scrape_max_per_source: int = 80
     collectors_config_path: Path = Field(

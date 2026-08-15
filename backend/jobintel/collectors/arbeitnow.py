@@ -6,8 +6,9 @@ from datetime import UTC, datetime
 from typing import Any
 
 from jobintel.collectors.http import get_json
-from jobintel.collectors.normalize import looks_remote, strip_html
+from jobintel.collectors.normalize import looks_remote
 from jobintel.models import CollectedJob, RemoteType
+from jobintel.text import clean_description
 
 
 def _posted_at(value: Any) -> datetime | None:
@@ -55,7 +56,8 @@ def fetch_arbeitnow(*, limit: int = 80) -> list[CollectedJob]:
                 title=str(item["title"]).strip(),
                 company_name=str(item.get("company_name") or "Unknown").strip() or "Unknown",
                 url=url,
-                description=strip_html(str(item.get("description") or "")) or str(item["title"]),
+                description=clean_description(str(item.get("description") or ""))
+                or str(item["title"]),
                 location=location or ("Remote" if remote else None),
                 remote_type=(
                     RemoteType.REMOTE

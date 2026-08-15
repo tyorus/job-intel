@@ -9,8 +9,8 @@ from email.utils import parsedate_to_datetime
 import httpx
 
 from jobintel.collectors.http import get_text
-from jobintel.collectors.normalize import strip_html
 from jobintel.models import CollectedJob, RemoteType
+from jobintel.text import clean_description
 
 ATOM = "{http://www.w3.org/2005/Atom}"
 
@@ -108,7 +108,7 @@ def fetch_rss(feed_url: str, *, limit: int = 80, source: str = "rss") -> list[Co
                 title=role,
                 company_name=company,
                 url=url,
-                description=strip_html(item.get("description") or "") or role,
+                description=clean_description(item.get("description") or "") or role,
                 location="Remote",
                 remote_type=RemoteType.REMOTE,
                 source=source_name,

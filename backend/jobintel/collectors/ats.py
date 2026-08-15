@@ -8,8 +8,9 @@ from typing import Any
 import httpx
 
 from jobintel.collectors.http import USER_AGENT, get_json
-from jobintel.collectors.normalize import looks_remote, strip_html
+from jobintel.collectors.normalize import looks_remote
 from jobintel.models import CollectedJob, RemoteType
+from jobintel.text import clean_description
 
 
 def _parse_dt(value: Any) -> datetime | None:
@@ -71,7 +72,7 @@ def fetch_greenhouse(board_token: str, *, limit: int = 80) -> list[CollectedJob]
                 title=str(item["title"]).strip(),
                 company_name=board_token,
                 url=abs_url,
-                description=strip_html(str(item.get("content") or "")) or str(item["title"]),
+                description=clean_description(str(item.get("content") or "")) or str(item["title"]),
                 location=location,
                 remote_type=(
                     RemoteType.REMOTE if looks_remote(location, True) else RemoteType.UNKNOWN
@@ -128,7 +129,9 @@ def fetch_lever(company: str, *, limit: int = 80) -> list[CollectedJob]:
         if not hosted:
             continue
         apply_url = str(item.get("applyUrl") or "").strip() or None
-        description = strip_html(str(item.get("descriptionPlain") or item.get("description") or ""))
+        description = clean_description(
+            str(item.get("descriptionPlain") or item.get("description") or "")
+        )
         jobs.append(
             CollectedJob(
                 title=str(item["text"]).strip(),

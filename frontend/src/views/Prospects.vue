@@ -1,6 +1,6 @@
 <template>
   <section>
-    <div class="row" style="justify-content: space-between">
+    <div class="page-head">
       <div>
         <h1>Prospects</h1>
         <p class="muted">Services pipeline from the Operational Intelligence Brief offer.</p>
@@ -37,32 +37,83 @@
     </form>
 
     <div class="toolbar">
-      <input v-model="q" placeholder="Search name or company…" @keyup.enter="load" />
-      <select v-model="status" @change="load">
-        <option value="">Active (hide cancelled)</option>
-        <option v-for="item in PROSPECT_STATUSES" :key="item" :value="item">{{ labelize(item) }}</option>
-      </select>
-      <select v-model="packageFilter" @change="load">
-        <option value="">All packages</option>
-        <option v-for="item in PACKAGES" :key="item" :value="item">{{ PACKAGE_LABELS[item] }}</option>
-      </select>
-      <button type="button" class="secondary" @click="load">Filter</button>
+      <label class="field field-search">
+        <span>Search</span>
+        <input v-model="q" placeholder="Name or company" @keyup.enter="load" />
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select v-model="status" @change="load">
+          <option value="">Active (hide cancelled)</option>
+          <option v-for="item in PROSPECT_STATUSES" :key="item" :value="item">{{ labelize(item) }}</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Package</span>
+        <select v-model="packageFilter" @change="load">
+          <option value="">All packages</option>
+          <option v-for="item in PACKAGES" :key="item" :value="item">{{ PACKAGE_LABELS[item] }}</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Sort</span>
+        <select v-model="sortKey" @change="sortDir = defaultSortDir(sortKey)">
+          <option value="updated">Updated</option>
+          <option value="follow_up">Follow-up</option>
+          <option value="name">Name</option>
+          <option value="company">Company</option>
+          <option value="package">Package</option>
+          <option value="status">Status</option>
+          <option value="value">Value</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Order</span>
+        <select v-model="sortDir">
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </label>
+      <div class="field field-actions">
+        <span>&nbsp;</span>
+        <button type="button" class="secondary" @click="load">Filter</button>
+      </div>
     </div>
 
     <p v-if="error" class="flash">{{ error }}</p>
     <table class="table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Company</th>
-          <th>Package</th>
-          <th>Status</th>
-          <th>Follow-up</th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'name' }" @click="toggleSort('name')">
+              Name{{ sortMark(sortKey, "name", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'company' }" @click="toggleSort('company')">
+              Company{{ sortMark(sortKey, "company", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'package' }" @click="toggleSort('package')">
+              Package{{ sortMark(sortKey, "package", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'status' }" @click="toggleSort('status')">
+              Status{{ sortMark(sortKey, "status", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'follow_up' }" @click="toggleSort('follow_up')">
+              Follow-up{{ sortMark(sortKey, "follow_up", sortDir) }}
+            </button>
+          </th>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="row in rows"
+          v-for="row in sortedRows"
           :key="row.id"
           class="clickable"
           @click="$router.push(`/prospects/${row.id}`)"
@@ -75,20 +126,30 @@
         </tr>
       </tbody>
     </table>
-    <p v-if="!rows.length" class="muted">No prospects match this filter.</p>
+    <p v-if="!sortedRows.length" class="muted">No prospects match this filter.</p>
   </section>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { api } from "../api";
 import StatusPill from "../components/StatusPill.vue";
-import { PACKAGES, PACKAGE_LABELS, PROSPECT_STATUSES, labelize } from "../constants";
+import {
+  PACKAGES,
+  PACKAGE_LABELS,
+  PROSPECT_STATUSES,
+  defaultSortDir,
+  labelize,
+  sortBy,
+  sortMark,
+} from "../constants";
 
 const rows = ref([]);
 const q = ref("");
 const status = ref("");
 const packageFilter = ref("");
+const sortKey = ref("updated");
+const sortDir = ref("desc");
 const error = ref("");
 const formError = ref("");
 const showForm = ref(false);
@@ -105,6 +166,27 @@ const form = reactive({
   next_action: "",
   notes: "",
 });
+
+const sortedRows = computed(() =>
+  sortBy(rows.value, sortKey.value, sortDir.value, {
+    updated: (row) => row.updated_at,
+    follow_up: (row) => row.follow_up_date,
+    name: (row) => row.name,
+    company: (row) => row.company,
+    package: (row) => row.package,
+    status: (row) => row.status,
+    value: (row) => row.value_estimate_usd,
+  }),
+);
+
+function toggleSort(key) {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+    return;
+  }
+  sortKey.value = key;
+  sortDir.value = defaultSortDir(key);
+}
 
 async function load() {
   error.value = "";

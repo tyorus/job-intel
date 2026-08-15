@@ -184,11 +184,54 @@ nav a.router-link-active {
   align-items: center;
 }
 
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
 .toolbar {
   display: flex;
-  gap: 0.6rem;
   flex-wrap: wrap;
+  gap: 0.7rem 0.75rem;
+  align-items: end;
   margin: 0 0 1rem;
+}
+
+.toolbar .field {
+  flex: 1 1 10.5rem;
+}
+
+.toolbar .field-search {
+  flex: 2 1 16rem;
+}
+
+.toolbar .field-actions {
+  flex: 0 0 auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.field > span,
+.form-grid label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 input,
@@ -199,10 +242,22 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.55rem 0.7rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) calc(50% - 3px), calc(100% - 9px) calc(50% - 3px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 1.7rem;
 }
 
 textarea {
-  width: 100%;
   min-height: 90px;
   resize: vertical;
 }
@@ -216,6 +271,7 @@ button,
   padding: 0.5rem 0.95rem;
   font-weight: 600;
   cursor: pointer;
+  width: auto;
 }
 
 button.secondary,
@@ -249,12 +305,42 @@ button.danger {
   vertical-align: top;
 }
 
+.table th,
+.table td {
+  min-width: 0;
+}
+
 .table th {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.sort-btn {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 0;
+  border-radius: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.sort-btn:hover {
+  color: var(--accent);
+}
+
+.sort-btn.active {
+  color: var(--text);
 }
 
 .pill {
@@ -292,21 +378,33 @@ button.danger {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.7rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+  align-items: start;
 }
 
 .form-grid .span-2 {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 720px) {
-  .form-grid .span-2 {
-    grid-column: span 1;
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
+
+  .toolbar .field,
+  .toolbar .field-search {
+    flex: 1 1 100%;
+  }
+
+  .page-head,
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  nav {
+    flex-wrap: wrap;
   }
 }
 
@@ -367,4 +465,42 @@ button.danger {
   border: 1px solid var(--line);
   overflow: auto;
   white-space: pre-wrap;
+}
+
+.job-description-card h2 {
+  margin-bottom: 0.9rem;
+}
+
+.job-description {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  line-height: 1.6;
+  max-width: 72ch;
+}
+
+.job-description h3,
+.job-description h4 {
+  margin: 0.35rem 0 0;
+  font-size: 1.12rem;
+}
+
+.job-description h4 {
+  font-size: 1.02rem;
+}
+
+.job-description p {
+  margin: 0;
+}
+
+.job-description ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.job-description li::marker {
+  color: var(--accent);
 }

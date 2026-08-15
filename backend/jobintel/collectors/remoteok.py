@@ -6,8 +6,8 @@ from datetime import UTC, datetime
 from typing import Any
 
 from jobintel.collectors.http import get_json
-from jobintel.collectors.normalize import strip_html
 from jobintel.models import CollectedJob, RemoteType
+from jobintel.text import clean_description
 
 
 def _posted_at(item: dict[str, Any]) -> datetime | None:
@@ -40,9 +40,7 @@ def fetch_remoteok(*, limit: int = 80) -> list[CollectedJob]:
         if not url:
             continue
         tags = _tags(item)
-        description = strip_html(str(item.get("description") or ""))
-        if tags:
-            description = f"{description}\n\nTags: {', '.join(tags)}".strip()
+        description = clean_description(str(item.get("description") or ""))
         salary = item.get("salary") or item.get("salary_min") or item.get("salary_max")
         salary_text = str(salary).strip() if salary not in (None, "") else None
         apply_url = str(item.get("apply_url") or "").strip() or None

@@ -17,18 +17,58 @@ def test_strip_html_and_hash_stable() -> None:
     assert a != c
 
 
-def test_keyword_filter() -> None:
-    job = CollectedJob(
-        title="Senior Data Engineer",
-        company_name="Acme",
+def _job(title: str, description: str, company: str = "Acme") -> CollectedJob:
+    return CollectedJob(
+        title=title,
+        company_name=company,
         url="https://example.com/jobs/1",
-        description="Build Python ETL pipelines",
+        description=description,
         remote_type=RemoteType.REMOTE,
         source="remoteok",
     )
+
+
+KEYWORDS = [
+    "python",
+    "data analyst",
+    "data engineer",
+    "fastapi",
+    "etl",
+    "pandas",
+    "sql",
+    "pipeline",
+    "ocean",
+    "analytics",
+    "ops",
+]
+
+
+def test_keyword_filter() -> None:
+    job = _job("Senior Data Engineer", "Build Python ETL pipelines")
     assert matches_keywords(job, ["python", "fastapi"])
     assert not matches_keywords(job, ["golang", "kubernetes"])
     assert matches_keywords(job, [])
+
+
+def test_keyword_filter_rejects_unrelated_roles() -> None:
+    painter = _job(
+        "painter",
+        "Apply paint to walls. Tags: sales non tech music exec marketing ads ops travel",
+    )
+    assert not matches_keywords(painter, KEYWORDS)
+    handyman = _job("Handyman", "Fix things on site", company="Ocean Hotels Group")
+    assert not matches_keywords(handyman, KEYWORDS)
+    sales = _job("Sales Development Representative", "Own the sales pipeline and analytics")
+    assert not matches_keywords(sales, KEYWORDS)
+
+
+def test_keyword_filter_keeps_relevant_roles() -> None:
+    titled = _job("SQL Developer", "Work with stakeholders and dashboards")
+    assert matches_keywords(titled, KEYWORDS)
+    backend = _job("Backend Engineer", "We use Python, FastAPI, and Postgres")
+    assert matches_keywords(backend, KEYWORDS)
+    analyst = _job("Product Analyst", "data analyst work with pandas and etl")
+    assert matches_keywords(analyst, KEYWORDS)
 
 
 def test_parse_rss_items() -> None:
@@ -48,3 +88,4 @@ def test_parse_rss_items() -> None:
     assert len(items) == 1
     assert items[0]["title"].startswith("Harbor Labs")
     assert "weworkremotely.com" in items[0]["link"]
+

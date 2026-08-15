@@ -20,6 +20,7 @@ from jobintel.models import (
     Prospect,
     ProspectStatus,
 )
+from jobintel.text import clean_description
 
 
 def _now() -> datetime:
@@ -178,6 +179,8 @@ class SqliteStore:
                 data["metadata_json"] = {}
         elif meta is None:
             data["metadata_json"] = {}
+        if isinstance(data.get("description"), str):
+            data["description"] = clean_description(data["description"])
         return JobRead.model_validate(data)
 
     def list_jobs(
@@ -226,6 +229,7 @@ class SqliteStore:
         digest = job.content_hash or job_content_hash(
             title=job.title, company=company_name or "", description=job.description
         )
+        description = clean_description(job.description)
         self._conn.execute(
             """
             insert into jobs (
@@ -247,7 +251,7 @@ class SqliteStore:
                 job.source_job_id,
                 job.url or None,
                 job.apply_url,
-                job.description,
+                description,
                 _iso(job.posted_at),
                 _iso(job.deadline_at),
                 _iso(now),

@@ -20,6 +20,7 @@ from jobintel.models import (
     Prospect,
     ProspectStatus,
 )
+from jobintel.text import clean_description
 
 
 def _now() -> str:
@@ -85,6 +86,8 @@ class Store:
                 data["metadata_json"] = json.loads(meta)
             except json.JSONDecodeError:
                 data["metadata_json"] = {}
+        if isinstance(data.get("description"), str):
+            data["description"] = clean_description(data["description"])
         return JobRead.model_validate({**data, "company_name": company_name})
 
     # --- jobs --------------------------------------------------------------
@@ -137,6 +140,8 @@ class Store:
             payload.pop("url", None)
         if company_id:
             payload["company_id"] = str(company_id)
+        if isinstance(payload.get("description"), str):
+            payload["description"] = clean_description(payload["description"])
         if not payload.get("content_hash"):
             payload["content_hash"] = job_content_hash(
                 title=job.title,

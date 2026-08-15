@@ -74,3 +74,34 @@ export function isPastDeadline(value) {
   if (Number.isNaN(date.getTime())) return false;
   return date.getTime() < Date.now();
 }
+
+export function sortMark(activeKey, key, dir) {
+  if (activeKey !== key) return "";
+  return dir === "asc" ? " ↑" : " ↓";
+}
+
+export function defaultSortDir(key) {
+  if (["title", "company", "name", "deadline", "follow_up"].includes(key)) return "asc";
+  return "desc";
+}
+
+export function sortBy(rows, key, dir, getters) {
+  const getter = getters[key];
+  if (!getter) return rows;
+  const sign = dir === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const va = getter(a);
+    const vb = getter(b);
+    const aEmpty = va == null || va === "";
+    const bEmpty = vb == null || vb === "";
+    if (aEmpty && bEmpty) return 0;
+    if (aEmpty) return 1;
+    if (bEmpty) return -1;
+    if (typeof va === "number" && typeof vb === "number") return (va - vb) * sign;
+    const sa = String(va).toLowerCase();
+    const sb = String(vb).toLowerCase();
+    if (sa < sb) return -1 * sign;
+    if (sa > sb) return 1 * sign;
+    return 0;
+  });
+}

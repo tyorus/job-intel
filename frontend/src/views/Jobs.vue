@@ -1,6 +1,6 @@
 <template>
   <section>
-    <div class="row" style="justify-content: space-between">
+    <div class="page-head">
       <div>
         <h1>Jobs</h1>
         <p class="muted">Scraped boards plus manual LinkedIn / URL paste.</p>
@@ -59,38 +59,92 @@
     </form>
 
     <div class="toolbar">
-      <input v-model="q" placeholder="Search title…" @keyup.enter="load" />
-      <select v-model="status" @change="load">
-        <option value="">Active (hide not related)</option>
-        <option v-for="item in JOB_STATUSES" :key="item" :value="item">{{ labelize(item) }}</option>
-      </select>
-      <select v-model="source" @change="load">
-        <option value="">All sources</option>
-        <option value="linkedin">linkedin</option>
-        <option value="remoteok">remoteok</option>
-        <option value="arbeitnow">arbeitnow</option>
-        <option value="greenhouse">greenhouse</option>
-        <option value="lever">lever</option>
-        <option value="weworkremotely">weworkremotely</option>
-        <option value="manual">manual</option>
-      </select>
-      <button type="button" class="secondary" @click="load">Filter</button>
+      <label class="field field-search">
+        <span>Search</span>
+        <input v-model="q" placeholder="Title or description" @keyup.enter="load" />
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select v-model="status" @change="load">
+          <option value="">Active (hide not related)</option>
+          <option v-for="item in JOB_STATUSES" :key="item" :value="item">{{ labelize(item) }}</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Source</span>
+        <select v-model="source" @change="load">
+          <option value="">All sources</option>
+          <option value="linkedin">linkedin</option>
+          <option value="remoteok">remoteok</option>
+          <option value="arbeitnow">arbeitnow</option>
+          <option value="greenhouse">greenhouse</option>
+          <option value="lever">lever</option>
+          <option value="weworkremotely">weworkremotely</option>
+          <option value="manual">manual</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Sort</span>
+        <select v-model="sortKey" @change="sortDir = defaultSortDir(sortKey)">
+          <option value="listed">Listed date</option>
+          <option value="deadline">Deadline</option>
+          <option value="title">Role</option>
+          <option value="company">Company</option>
+          <option value="source">Source</option>
+          <option value="status">Status</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Order</span>
+        <select v-model="sortDir">
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </label>
+      <div class="field field-actions">
+        <span>&nbsp;</span>
+        <button type="button" class="secondary" @click="load">Filter</button>
+      </div>
     </div>
 
     <p v-if="error" class="flash">{{ error }}</p>
     <table class="table">
       <thead>
         <tr>
-          <th>Role</th>
-          <th>Company</th>
-          <th>Listed</th>
-          <th>Deadline</th>
-          <th>Source</th>
-          <th>Status</th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'title' }" @click="toggleSort('title')">
+              Role{{ sortMark(sortKey, "title", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'company' }" @click="toggleSort('company')">
+              Company{{ sortMark(sortKey, "company", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'listed' }" @click="toggleSort('listed')">
+              Listed{{ sortMark(sortKey, "listed", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'deadline' }" @click="toggleSort('deadline')">
+              Deadline{{ sortMark(sortKey, "deadline", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'source' }" @click="toggleSort('source')">
+              Source{{ sortMark(sortKey, "source", sortDir) }}
+            </button>
+          </th>
+          <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'status' }" @click="toggleSort('status')">
+              Status{{ sortMark(sortKey, "status", sortDir) }}
+            </button>
+          </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="job in jobs" :key="job.id" class="clickable" @click="$router.push(`/jobs/${job.id}`)">
+        <tr v-for="job in sortedJobs" :key="job.id" class="clickable" @click="$router.push(`/jobs/${job.id}`)">
           <td>
             <div>{{ job.title }}</div>
             <div v-if="job.salary_text" class="mono muted">{{ job.salary_text }}</div>
@@ -105,20 +159,30 @@
         </tr>
       </tbody>
     </table>
-    <p v-if="!jobs.length" class="muted">No jobs match this filter.</p>
+    <p v-if="!sortedJobs.length" class="muted">No jobs match this filter.</p>
   </section>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { api } from "../api";
 import StatusPill from "../components/StatusPill.vue";
-import { JOB_STATUSES, formatDate, isPastDeadline, labelize } from "../constants";
+import {
+  JOB_STATUSES,
+  defaultSortDir,
+  formatDate,
+  isPastDeadline,
+  labelize,
+  sortBy,
+  sortMark,
+} from "../constants";
 
 const jobs = ref([]);
 const q = ref("");
 const status = ref("");
 const source = ref("");
+const sortKey = ref("listed");
+const sortDir = ref("desc");
 const error = ref("");
 const formError = ref("");
 const showForm = ref(false);
@@ -139,6 +203,26 @@ const form = reactive({
   seniority: "",
   tags: "",
 });
+
+const sortedJobs = computed(() =>
+  sortBy(jobs.value, sortKey.value, sortDir.value, {
+    listed: (job) => job.posted_at || job.discovered_at,
+    deadline: (job) => job.deadline_at,
+    title: (job) => job.title,
+    company: (job) => job.company_name,
+    source: (job) => job.source,
+    status: (job) => job.status,
+  }),
+);
+
+function toggleSort(key) {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+    return;
+  }
+  sortKey.value = key;
+  sortDir.value = defaultSortDir(key);
+}
 
 function toIsoDate(value) {
   if (!value) return null;

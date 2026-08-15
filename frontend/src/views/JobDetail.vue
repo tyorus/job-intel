@@ -116,10 +116,7 @@
       </div>
     </article>
 
-    <article class="card">
-      <h2>Description</h2>
-      <p style="white-space: pre-wrap">{{ job.description }}</p>
-    </article>
+    <DescriptionBody :text="job.description" />
   </section>
   <p v-else-if="error" class="flash">{{ error }}</p>
   <p v-else class="muted">Loading…</p>
@@ -129,6 +126,7 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { api } from "../api";
+import DescriptionBody from "../components/DescriptionBody.vue";
 import ProgressForm from "../components/ProgressForm.vue";
 import StatusPill from "../components/StatusPill.vue";
 import {
