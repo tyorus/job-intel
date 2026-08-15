@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -88,4 +89,9 @@ class ProspectUpdate(BaseModel):
 
 class ProgressIn(BaseModel):
     status: str
+    note: str | None = None
+
+
+class JobDismissIn(BaseModel):
+    job_ids: list[UUID] = Field(min_length=1, max_length=200)
     note: str | None = None

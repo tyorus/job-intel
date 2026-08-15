@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from jobintel.collectors.normalize import job_content_hash
 from jobintel.db import get_supabase_client
@@ -101,6 +101,7 @@ class Store:
         limit: int = 100,
         offset: int = 0,
     ) -> list[JobRead]:
+        self._purge_not_related_jobs()
         query = self.client.table("jobs").select("*")
         if status:
             query = query.eq("status", status)
@@ -179,27 +180,57 @@ class Store:
         )
         self.client.table("jobs").delete().eq("id", job_key).execute()
 
+    def dismiss_job(self, job_id: UUID) -> None:
+        job = self.get_job(job_id)
+        if job is None:
+            raise KeyError(f"job not found: {job_id}")
+        payload: dict[str, Any] = {"id": str(uuid4())}
+        if job.url:
+            payload["url"] = job.url
+        if job.content_hash:
+            payload["content_hash"] = job.content_hash
+        if len(payload) > 1:
+            try:
+                self.client.table("dismissed_jobs").insert(payload).execute()
+            except Exception:
+                pass
+        self.delete_job(job_id)
+
+    def _purge_not_related_jobs(self) -> None:
+        result = (
+            self.client.table("jobs").select("id").eq("status", "not_related").execute()
+        )
+        for row in result.data or []:
+            try:
+                self.dismiss_job(UUID(str(row["id"])))
+            except KeyError:
+                continue
+
     def existing_job_keys(self) -> tuple[set[str], set[str]]:
         urls: set[str] = set()
         hashes: set[str] = set()
-        start = 0
-        page = 1000
-        while True:
-            result = (
-                self.client.table("jobs")
-                .select("url, content_hash")
-                .range(start, start + page - 1)
-                .execute()
-            )
-            rows = result.data or []
-            for row in rows:
-                if row.get("url"):
-                    urls.add(str(row["url"]))
-                if row.get("content_hash"):
-                    hashes.add(str(row["content_hash"]))
-            if len(rows) < page:
-                break
-            start += page
+        for table in ("jobs", "dismissed_jobs"):
+            start = 0
+            page = 1000
+            while True:
+                try:
+                    result = (
+                        self.client.table(table)
+                        .select("url, content_hash")
+                        .range(start, start + page - 1)
+                        .execute()
+                    )
+                except Exception:
+                    break
+                rows = result.data or []
+                for row in rows:
+                    if row.get("url"):
+                        urls.add(str(row["url"]))
+                    if row.get("content_hash"):
+                        hashes.add(str(row["content_hash"]))
+                if len(rows) < page:
+                    break
+                start += page
         return urls, hashes
 
     def insert_collected_jobs(self, collected: list[CollectedJob]) -> dict[str, int]:

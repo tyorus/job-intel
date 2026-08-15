@@ -116,10 +116,17 @@ class SqliteStore:
               note text,
               created_at text not null
             );
+            create table if not exists dismissed_jobs (
+              id text primary key,
+              url text unique,
+              content_hash text unique,
+              created_at text not null
+            );
             """
         )
         self._conn.commit()
         self._ensure_job_columns()
+        self._purge_not_related_jobs()
 
     def _ensure_job_columns(self) -> None:
         existing = {
@@ -192,6 +199,7 @@ class SqliteStore:
         limit: int = 100,
         offset: int = 0,
     ) -> list[JobRead]:
+        self._purge_not_related_jobs()
         clauses = ["1=1"]
         params: list[Any] = []
         if status:
@@ -314,12 +322,42 @@ class SqliteStore:
         self._conn.execute("delete from jobs where id = ?", (job_key,))
         self._conn.commit()
 
+    def dismiss_job(self, job_id: UUID) -> None:
+        job = self.get_job(job_id)
+        if job is None:
+            raise KeyError(f"job not found: {job_id}")
+        if job.url or job.content_hash:
+            self._conn.execute(
+                """
+                insert or ignore into dismissed_jobs (id, url, content_hash, created_at)
+                values (?, ?, ?, ?)
+                """,
+                (str(uuid4()), job.url or None, job.content_hash or None, _iso(_now())),
+            )
+            self._conn.commit()
+        self.delete_job(job_id)
+
+    def _purge_not_related_jobs(self) -> None:
+        rows = self._rows("select id from jobs where status = 'not_related'")
+        for row in rows:
+            try:
+                self.dismiss_job(UUID(str(row["id"])))
+            except KeyError:
+                continue
+
     def existing_job_keys(self) -> tuple[set[str], set[str]]:
         urls = {str(row["url"]) for row in self._rows("select url from jobs where url is not null")}
         hashes = {
             str(row["content_hash"])
             for row in self._rows("select content_hash from jobs where content_hash is not null")
         }
+        urls.update(
+            str(row["url"]) for row in self._rows("select url from dismissed_jobs where url is not null")
+        )
+        hashes.update(
+            str(row["content_hash"])
+            for row in self._rows("select content_hash from dismissed_jobs where content_hash is not null")
+        )
         return urls, hashes
 
     def insert_collected_jobs(self, collected: list[CollectedJob]) -> dict[str, int]:

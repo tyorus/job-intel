@@ -303,6 +303,37 @@ button.row-action {
   text-align: right;
 }
 
+.table .check {
+  width: 2rem;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.table .check input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  display: block;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.clickable.selected td {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -450,7 +481,7 @@ button.row-action {
   cursor: pointer;
 }
 
-.clickable:hover td:not(.actions) {
+.clickable:hover td:not(.actions):not(.check) {
   color: var(--accent);
 }
 

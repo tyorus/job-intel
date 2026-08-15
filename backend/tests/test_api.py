@@ -81,6 +81,9 @@ class FakeStore:
             if not (event.entity_type == ProgressEntityType.JOB and event.entity_id == job_id)
         ]
 
+    def dismiss_job(self, job_id: UUID) -> None:
+        self.delete_job(job_id)
+
     def submit_job_progress(
         self, job_id: UUID, status: JobStatus, note: str | None = None
     ) -> ProgressEvent:
@@ -227,6 +230,9 @@ def test_job_not_related_and_prospect_cancelled(client: TestClient) -> None:
     )
     assert dismiss.status_code == 201
     assert dismiss.json()["status"] == "not_related"
+    assert client.get(f"/api/jobs/{job['id']}", headers=_auth()).status_code == 404
+    listed = client.get("/api/jobs", headers=_auth())
+    assert all(row["id"] != job["id"] for row in listed.json())
 
     prospect = client.post(
         "/api/prospects",
@@ -240,6 +246,38 @@ def test_job_not_related_and_prospect_cancelled(client: TestClient) -> None:
     )
     assert cancelled.status_code == 201
     assert cancelled.json()["status"] == "cancelled"
+
+
+def test_dismiss_jobs_bulk(client: TestClient) -> None:
+    keep = client.post(
+        "/api/jobs",
+        headers=_auth(),
+        json={"title": "Keep me", "description": "Data pipelines"},
+    ).json()
+    drop_a = client.post(
+        "/api/jobs",
+        headers=_auth(),
+        json={"title": "Sales A", "description": "Quota"},
+    ).json()
+    drop_b = client.post(
+        "/api/jobs",
+        headers=_auth(),
+        json={"title": "Sales B", "description": "Quota"},
+    ).json()
+    response = client.post(
+        "/api/jobs/not-related",
+        headers=_auth(),
+        json={"job_ids": [drop_a["id"], drop_b["id"], "00000000-0000-0000-0000-000000000000"]},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert set(body["dismissed"]) == {drop_a["id"], drop_b["id"]}
+    assert body["missing"] == ["00000000-0000-0000-0000-000000000000"]
+    listed = client.get("/api/jobs", headers=_auth()).json()
+    ids = {row["id"] for row in listed}
+    assert keep["id"] in ids
+    assert drop_a["id"] not in ids
+    assert drop_b["id"] not in ids
 
 
 def test_job_metadata_create_and_patch(client: TestClient) -> None:

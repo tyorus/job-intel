@@ -11,7 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from jobintel.api.schemas import JobCreate, JobUpdate, ProgressIn, ProspectCreate, ProspectUpdate
+from jobintel.api.schemas import (
+    JobCreate,
+    JobDismissIn,
+    JobUpdate,
+    ProgressIn,
+    ProspectCreate,
+    ProspectUpdate,
+)
 from jobintel.config import Settings, get_settings
 from jobintel.db import get_store as build_store
 from jobintel.models import Job, JobStatus, ProgressEntityType, Prospect, ProspectStatus
@@ -86,6 +93,20 @@ def list_jobs(
     return [job.model_dump(mode="json") for job in jobs]
 
 
+@app.post("/api/jobs/not-related")
+def dismiss_jobs(_: Auth, store: Db, body: JobDismissIn) -> dict:
+    dismiss = getattr(store, "dismiss_job", store.delete_job)
+    dismissed: list[str] = []
+    missing: list[str] = []
+    for job_id in body.job_ids:
+        try:
+            dismiss(job_id)
+            dismissed.append(str(job_id))
+        except KeyError:
+            missing.append(str(job_id))
+    return {"dismissed": dismissed, "missing": missing}
+
+
 @app.get("/api/jobs/{job_id}")
 def get_job(_: Auth, store: Db, job_id: UUID) -> dict:
     job = store.get_job(job_id)
@@ -147,6 +168,15 @@ def job_progress(_: Auth, store: Db, job_id: UUID, body: ProgressIn) -> dict:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=f"Invalid job status: {body.status}") from exc
     try:
+        if status_value == JobStatus.NOT_RELATED:
+            dismiss = getattr(store, "dismiss_job", store.delete_job)
+            dismiss(job_id)
+            return {
+                "entity_type": ProgressEntityType.JOB.value,
+                "entity_id": str(job_id),
+                "status": status_value.value,
+                "note": body.note,
+            }
         event = store.submit_job_progress(job_id, status_value, body.note)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Job not found") from exc

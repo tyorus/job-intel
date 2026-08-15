@@ -108,9 +108,27 @@
     </div>
 
     <p v-if="error" class="flash">{{ error }}</p>
+    <div v-if="selectedCount" class="bulk-bar">
+      <span>{{ selectedCount }} selected</span>
+      <button type="button" class="secondary" @click="clearSelection">Clear</button>
+      <button type="button" class="danger" :disabled="bulkMarking" @click="markSelectedNotRelated">
+        {{ bulkMarking ? "Saving…" : "Not related" }}
+      </button>
+    </div>
     <table class="table">
       <thead>
         <tr>
+          <th class="check">
+            <input
+              type="checkbox"
+              :checked="allSelected"
+              :indeterminate.prop="partialSelected"
+              :disabled="!selectableJobs.length"
+              aria-label="Select all visible jobs"
+              @click.stop
+              @change.stop="onSelectAllChange"
+            />
+          </th>
           <th>
             <button type="button" class="sort-btn" :class="{ active: sortKey === 'title' }" @click="toggleSort('title')">
               Role{{ sortMark(sortKey, "title", sortDir) }}
@@ -145,7 +163,23 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="job in sortedJobs" :key="job.id" class="clickable" @click="$router.push(`/jobs/${job.id}`)">
+        <tr
+          v-for="job in sortedJobs"
+          :key="job.id"
+          class="clickable"
+          :class="{ selected: selected.has(job.id) }"
+          @click="onRowClick(job, $event)"
+        >
+          <td class="check" @click.stop="onCheckCellClick(job, $event)">
+            <input
+              type="checkbox"
+              :checked="selected.has(job.id)"
+              :disabled="job.status === 'not_related'"
+              :aria-label="`Select ${job.title}`"
+              @click.stop
+              @change="onCheckChange(job.id, $event)"
+            />
+          </td>
           <td>
             <div>{{ job.title }}</div>
             <div v-if="job.salary_text" class="mono muted">{{ job.salary_text }}</div>
@@ -162,7 +196,7 @@
               v-if="job.status !== 'not_related'"
               type="button"
               class="danger row-action"
-              :disabled="marking.has(job.id)"
+              :disabled="marking.has(job.id) || bulkMarking"
               @click="markNotRelated(job)"
             >
               {{ marking.has(job.id) ? "Saving…" : "Not related" }}
@@ -177,6 +211,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 import { api } from "../api";
 import StatusPill from "../components/StatusPill.vue";
 import {
@@ -189,6 +224,7 @@ import {
   sortMark,
 } from "../constants";
 
+const router = useRouter();
 const jobs = ref([]);
 const q = ref("");
 const status = ref("");
@@ -199,6 +235,9 @@ const error = ref("");
 const formError = ref("");
 const showForm = ref(false);
 const marking = ref(new Set());
+const selected = ref(new Set());
+const lastClickedId = ref("");
+const bulkMarking = ref(false);
 const form = reactive({
   title: "",
   company_name: "",
@@ -228,6 +267,73 @@ const sortedJobs = computed(() =>
   }),
 );
 
+const selectableJobs = computed(() =>
+  sortedJobs.value.filter((job) => job.status !== "not_related"),
+);
+const selectedCount = computed(() => selected.value.size);
+const allSelected = computed(
+  () => selectableJobs.value.length > 0 && selectableJobs.value.every((job) => selected.value.has(job.id)),
+);
+const partialSelected = computed(
+  () => selectedCount.value > 0 && !allSelected.value,
+);
+
+function visibleIds() {
+  return selectableJobs.value.map((job) => job.id);
+}
+
+function pruneSelection(ids) {
+  const allowed = new Set(ids);
+  selected.value = new Set([...selected.value].filter((id) => allowed.has(id)));
+}
+
+function setSelected(jobId, on, event) {
+  const next = new Set(selected.value);
+  if (event?.shiftKey && lastClickedId.value) {
+    const ids = visibleIds();
+    const start = ids.indexOf(lastClickedId.value);
+    const end = ids.indexOf(jobId);
+    if (start >= 0 && end >= 0) {
+      const [from, to] = start < end ? [start, end] : [end, start];
+      for (const id of ids.slice(from, to + 1)) next.add(id);
+      selected.value = next;
+      lastClickedId.value = jobId;
+      return;
+    }
+  }
+  if (on) next.add(jobId);
+  else next.delete(jobId);
+  selected.value = next;
+  lastClickedId.value = jobId;
+}
+
+function onCheckChange(jobId, event) {
+  setSelected(jobId, event.target.checked, event);
+}
+
+function onCheckCellClick(job, event) {
+  if (event.target.closest("input") || job.status === "not_related") return;
+  setSelected(job.id, !selected.value.has(job.id), event);
+}
+
+function onSelectAllChange(event) {
+  selected.value = event.target.checked ? new Set(visibleIds()) : new Set();
+}
+
+function clearSelection() {
+  selected.value = new Set();
+}
+
+function onRowClick(job, event) {
+  if (event.target.closest("input, button, a, .actions, .check")) return;
+  if (selected.value.size) {
+    if (job.status === "not_related") return;
+    setSelected(job.id, !selected.value.has(job.id), event);
+    return;
+  }
+  router.push(`/jobs/${job.id}`);
+}
+
 function toggleSort(key) {
   if (sortKey.value === key) {
     sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
@@ -254,6 +360,7 @@ async function load() {
     jobs.value = status.value
       ? rows
       : rows.filter((job) => job.status !== "not_related");
+    pruneSelection(jobs.value.map((job) => job.id));
   } catch (err) {
     error.value = err.message;
   }
@@ -272,19 +379,44 @@ async function markNotRelated(job) {
         note: reason.trim() || "Marked not related",
       }),
     });
-    if (status.value === "not_related") {
-      jobs.value = jobs.value.map((row) =>
-        row.id === job.id ? { ...row, status: "not_related" } : row,
-      );
-    } else {
-      jobs.value = jobs.value.filter((row) => row.id !== job.id);
-    }
+    jobs.value = jobs.value.filter((row) => row.id !== job.id);
+    pruneSelection(jobs.value.map((row) => row.id));
   } catch (err) {
     error.value = err.message;
   } finally {
     const next = new Set(marking.value);
     next.delete(job.id);
     marking.value = next;
+  }
+}
+
+async function markSelectedNotRelated() {
+  const ids = [...selected.value];
+  if (!ids.length) return;
+  const reason = window.prompt(
+    `Mark ${ids.length} job${ids.length === 1 ? "" : "s"} as not related? Optional reason:`,
+  );
+  if (reason === null) return;
+  error.value = "";
+  bulkMarking.value = true;
+  try {
+    const result = await api("/api/jobs/not-related", {
+      method: "POST",
+      body: JSON.stringify({
+        job_ids: ids,
+        note: reason.trim() || "Marked not related",
+      }),
+    });
+    const gone = new Set(result.dismissed || []);
+    jobs.value = jobs.value.filter((row) => !gone.has(row.id));
+    selected.value = new Set();
+    if ((result.missing || []).length) {
+      error.value = `${result.missing.length} selected job${result.missing.length === 1 ? " was" : "s were"} already gone.`;
+    }
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    bulkMarking.value = false;
   }
 }
 
