@@ -87,6 +87,7 @@
         <span>Sort</span>
         <select v-model="sortKey" @change="sortDir = defaultSortDir(sortKey)">
           <option value="listed">Listed date</option>
+          <option value="added">Added time</option>
           <option value="deadline">Deadline</option>
           <option value="title">Role</option>
           <option value="company">Company</option>
@@ -145,6 +146,11 @@
             </button>
           </th>
           <th>
+            <button type="button" class="sort-btn" :class="{ active: sortKey === 'added' }" @click="toggleSort('added')">
+              Added{{ sortMark(sortKey, "added", sortDir) }}
+            </button>
+          </th>
+          <th>
             <button type="button" class="sort-btn" :class="{ active: sortKey === 'deadline' }" @click="toggleSort('deadline')">
               Deadline{{ sortMark(sortKey, "deadline", sortDir) }}
             </button>
@@ -185,7 +191,8 @@
             <div v-if="job.salary_text" class="mono muted">{{ job.salary_text }}</div>
           </td>
           <td>{{ job.company_name || "—" }}</td>
-          <td class="mono">{{ formatDate(job.posted_at || job.discovered_at) }}</td>
+          <td class="mono">{{ formatDate(job.posted_at) }}</td>
+          <td class="mono">{{ formatWhen(job.created_at || job.discovered_at) }}</td>
           <td class="mono" :class="{ flash: isPastDeadline(job.deadline_at) }">
             {{ formatDate(job.deadline_at) }}
           </td>
@@ -218,6 +225,7 @@ import {
   JOB_STATUSES,
   defaultSortDir,
   formatDate,
+  formatWhen,
   isPastDeadline,
   labelize,
   sortBy,
@@ -258,7 +266,8 @@ const form = reactive({
 
 const sortedJobs = computed(() =>
   sortBy(jobs.value, sortKey.value, sortDir.value, {
-    listed: (job) => job.posted_at || job.discovered_at,
+    listed: (job) => job.posted_at,
+    added: (job) => job.created_at || job.discovered_at,
     deadline: (job) => job.deadline_at,
     title: (job) => job.title,
     company: (job) => job.company_name,
