@@ -197,7 +197,7 @@ async function onProgress(payload) {
     method: "POST",
     body: JSON.stringify(payload),
   });
-  await load();
+  await router.push("/jobs");
 }
 
 async function saveMeta() {
@@ -235,7 +235,6 @@ async function markNotRelated() {
     status: "not_related",
     note: reason.trim() || "Marked not related",
   });
-  router.push("/jobs");
 }
 
 onMounted(async () => {
