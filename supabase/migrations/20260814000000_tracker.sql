@@ -1,11 +1,12 @@
 -- Tracker additions: client prospects + progress timeline
 -- Additive on Milestone 1 (companies / jobs / applications remain unchanged)
+-- Idempotent: remote may already have this schema from the SQL editor.
 
 -- ---------------------------------------------------------------------------
 -- prospects (freelance services pipeline)
 -- ---------------------------------------------------------------------------
 
-create table public.prospects (
+create table if not exists public.prospects (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   company text,
@@ -32,11 +33,12 @@ create table public.prospects (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create index prospects_status_idx on public.prospects (status);
-create index prospects_package_idx on public.prospects (package);
-create index prospects_follow_up_date_idx on public.prospects (follow_up_date);
-create index prospects_created_at_idx on public.prospects (created_at desc);
+create index if not exists prospects_status_idx on public.prospects (status);
+create index if not exists prospects_package_idx on public.prospects (package);
+create index if not exists prospects_follow_up_date_idx on public.prospects (follow_up_date);
+create index if not exists prospects_created_at_idx on public.prospects (created_at desc);
 
+drop trigger if exists prospects_set_updated_at on public.prospects;
 create trigger prospects_set_updated_at
 before update on public.prospects
 for each row execute function public.set_updated_at();
@@ -45,7 +47,7 @@ for each row execute function public.set_updated_at();
 -- progress_events (job or prospect status timeline)
 -- ---------------------------------------------------------------------------
 
-create table public.progress_events (
+create table if not exists public.progress_events (
   id uuid primary key default gen_random_uuid(),
   entity_type text not null
     check (entity_type in ('job', 'prospect')),
@@ -55,9 +57,9 @@ create table public.progress_events (
   created_at timestamptz not null default timezone('utc', now())
 );
 
-create index progress_events_entity_idx
+create index if not exists progress_events_entity_idx
   on public.progress_events (entity_type, entity_id, created_at desc);
-create index progress_events_created_at_idx
+create index if not exists progress_events_created_at_idx
   on public.progress_events (created_at desc);
 
 -- ---------------------------------------------------------------------------
@@ -67,6 +69,7 @@ create index progress_events_created_at_idx
 alter table public.prospects enable row level security;
 alter table public.progress_events enable row level security;
 
+drop policy if exists prospects_authenticated_all on public.prospects;
 create policy prospects_authenticated_all
   on public.prospects
   for all
@@ -74,6 +77,7 @@ create policy prospects_authenticated_all
   using (true)
   with check (true);
 
+drop policy if exists progress_events_authenticated_all on public.progress_events;
 create policy progress_events_authenticated_all
   on public.progress_events
   for all

@@ -1,5 +1,6 @@
 -- Milestone 1 init schema for Job Intelligence
 -- Tables: companies, jobs, job_analysis, job_scores, applications, resume_versions
+-- Idempotent: remote may already have this schema from the SQL editor.
 
 create extension if not exists "pgcrypto";
 
@@ -21,7 +22,7 @@ $$;
 -- companies
 -- ---------------------------------------------------------------------------
 
-create table public.companies (
+create table if not exists public.companies (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   domain text,
@@ -30,13 +31,13 @@ create table public.companies (
   constraint companies_name_unique unique (name)
 );
 
-create index companies_country_idx on public.companies (country);
+create index if not exists companies_country_idx on public.companies (country);
 
 -- ---------------------------------------------------------------------------
 -- jobs
 -- ---------------------------------------------------------------------------
 
-create table public.jobs (
+create table if not exists public.jobs (
   id uuid primary key default gen_random_uuid(),
   company_id uuid references public.companies (id) on delete set null,
   title text not null,
@@ -62,11 +63,12 @@ create table public.jobs (
   constraint jobs_content_hash_unique unique (content_hash)
 );
 
-create index jobs_status_idx on public.jobs (status);
-create index jobs_country_idx on public.jobs (country);
-create index jobs_discovered_at_idx on public.jobs (discovered_at desc);
-create index jobs_company_id_idx on public.jobs (company_id);
+create index if not exists jobs_status_idx on public.jobs (status);
+create index if not exists jobs_country_idx on public.jobs (country);
+create index if not exists jobs_discovered_at_idx on public.jobs (discovered_at desc);
+create index if not exists jobs_company_id_idx on public.jobs (company_id);
 
+drop trigger if exists jobs_set_updated_at on public.jobs;
 create trigger jobs_set_updated_at
 before update on public.jobs
 for each row execute function public.set_updated_at();
@@ -75,7 +77,7 @@ for each row execute function public.set_updated_at();
 -- job_analysis
 -- ---------------------------------------------------------------------------
 
-create table public.job_analysis (
+create table if not exists public.job_analysis (
   id uuid primary key default gen_random_uuid(),
   job_id uuid not null references public.jobs (id) on delete cascade,
   role_family text,
@@ -95,14 +97,14 @@ create table public.job_analysis (
   created_at timestamptz not null default timezone('utc', now())
 );
 
-create index job_analysis_job_id_idx on public.job_analysis (job_id);
-create index job_analysis_role_family_idx on public.job_analysis (role_family);
+create index if not exists job_analysis_job_id_idx on public.job_analysis (job_id);
+create index if not exists job_analysis_role_family_idx on public.job_analysis (role_family);
 
 -- ---------------------------------------------------------------------------
 -- job_scores
 -- ---------------------------------------------------------------------------
 
-create table public.job_scores (
+create table if not exists public.job_scores (
   id uuid primary key default gen_random_uuid(),
   job_id uuid not null references public.jobs (id) on delete cascade,
   total_score numeric(5,2) not null check (total_score >= 0 and total_score <= 100),
@@ -116,14 +118,14 @@ create table public.job_scores (
   created_at timestamptz not null default timezone('utc', now())
 );
 
-create index job_scores_job_id_idx on public.job_scores (job_id);
-create index job_scores_total_score_idx on public.job_scores (total_score desc);
+create index if not exists job_scores_job_id_idx on public.job_scores (job_id);
+create index if not exists job_scores_total_score_idx on public.job_scores (total_score desc);
 
 -- ---------------------------------------------------------------------------
 -- applications
 -- ---------------------------------------------------------------------------
 
-create table public.applications (
+create table if not exists public.applications (
   id uuid primary key default gen_random_uuid(),
   job_id uuid not null references public.jobs (id) on delete cascade,
   status text not null default 'new'
@@ -139,9 +141,10 @@ create table public.applications (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create index applications_job_id_idx on public.applications (job_id);
-create index applications_status_idx on public.applications (status);
+create index if not exists applications_job_id_idx on public.applications (job_id);
+create index if not exists applications_status_idx on public.applications (status);
 
+drop trigger if exists applications_set_updated_at on public.applications;
 create trigger applications_set_updated_at
 before update on public.applications
 for each row execute function public.set_updated_at();
@@ -150,7 +153,7 @@ for each row execute function public.set_updated_at();
 -- resume_versions
 -- ---------------------------------------------------------------------------
 
-create table public.resume_versions (
+create table if not exists public.resume_versions (
   id uuid primary key default gen_random_uuid(),
   job_id uuid not null references public.jobs (id) on delete cascade,
   version integer not null,
@@ -161,7 +164,7 @@ create table public.resume_versions (
   constraint resume_versions_job_version_unique unique (job_id, version)
 );
 
-create index resume_versions_job_id_idx on public.resume_versions (job_id);
+create index if not exists resume_versions_job_id_idx on public.resume_versions (job_id);
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security (single-user MVP)
@@ -176,6 +179,7 @@ alter table public.job_scores enable row level security;
 alter table public.applications enable row level security;
 alter table public.resume_versions enable row level security;
 
+drop policy if exists companies_authenticated_all on public.companies;
 create policy companies_authenticated_all
   on public.companies
   for all
@@ -183,6 +187,7 @@ create policy companies_authenticated_all
   using (true)
   with check (true);
 
+drop policy if exists jobs_authenticated_all on public.jobs;
 create policy jobs_authenticated_all
   on public.jobs
   for all
@@ -190,6 +195,7 @@ create policy jobs_authenticated_all
   using (true)
   with check (true);
 
+drop policy if exists job_analysis_authenticated_all on public.job_analysis;
 create policy job_analysis_authenticated_all
   on public.job_analysis
   for all
@@ -197,6 +203,7 @@ create policy job_analysis_authenticated_all
   using (true)
   with check (true);
 
+drop policy if exists job_scores_authenticated_all on public.job_scores;
 create policy job_scores_authenticated_all
   on public.job_scores
   for all
@@ -204,6 +211,7 @@ create policy job_scores_authenticated_all
   using (true)
   with check (true);
 
+drop policy if exists applications_authenticated_all on public.applications;
 create policy applications_authenticated_all
   on public.applications
   for all
@@ -211,6 +219,7 @@ create policy applications_authenticated_all
   using (true)
   with check (true);
 
+drop policy if exists resume_versions_authenticated_all on public.resume_versions;
 create policy resume_versions_authenticated_all
   on public.resume_versions
   for all
