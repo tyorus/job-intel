@@ -1,6 +1,6 @@
 # Job Intelligence
 
-Personal **Job Intelligence & pipeline tracker**: discover remote jobs from public boards, log LinkedIn roles by hand, track applications, and run a client-prospect pipeline for [Tyorus services](https://tyorus.com/services/).
+Personal **Job Intelligence & pipeline tracker**: discover remote jobs from public boards, log LinkedIn roles by hand, track applications, and run a client-prospect pipeline.
 
 **No auto-apply. No LinkedIn scraping.** GitHub Pages is not used — the Vue app deploys to Vercel.
 
