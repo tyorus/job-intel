@@ -461,6 +461,26 @@ button.row-action {
   padding: 0.1rem 0 0.4rem 0.8rem;
 }
 
+a.event {
+  display: block;
+  border-radius: 0 8px 8px 0;
+  color: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+a.event:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-left-color: var(--accent-2);
+}
+
+.event-title {
+  font-weight: 600;
+}
+
+.event p {
+  margin: 0.25rem 0 0;
+}
+
 .login-wrap {
   min-height: 100vh;
   display: grid;

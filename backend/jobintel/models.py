@@ -247,6 +247,21 @@ class ProgressEvent(BaseModel):
     created_at: datetime | None = None
 
 
+def dump_progress_with_labels(
+    events: list[ProgressEvent],
+    labels: dict[str, tuple[str | None, str | None]],
+) -> list[dict[str, Any]]:
+    """Serialize progress events with job title / prospect name attached."""
+    payload: list[dict[str, Any]] = []
+    for event in events:
+        title, company_name = labels.get(str(event.entity_id), (None, None))
+        item = event.model_dump(mode="json")
+        item["title"] = title
+        item["company_name"] = company_name
+        payload.append(item)
+    return payload
+
+
 class CollectedJob(BaseModel):
     """Normalized job from a public collector (before DB insert)."""
 

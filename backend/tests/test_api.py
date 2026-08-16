@@ -17,6 +17,7 @@ from jobintel.models import (
     ProgressEntityType,
     ProgressEvent,
     Prospect,
+    dump_progress_with_labels,
 )
 
 
@@ -27,12 +28,19 @@ class FakeStore:
         self.events: list[ProgressEvent] = []
 
     def dashboard(self) -> dict[str, Any]:
+        labels: dict[str, tuple[str | None, str | None]] = {}
+        for job in self.jobs.values():
+            if job.id is not None:
+                labels[str(job.id)] = (job.title, job.company_name)
+        for prospect in self.prospects.values():
+            if prospect.id is not None:
+                labels[str(prospect.id)] = (prospect.name, prospect.company)
         return {
             "jobs_total": len(self.jobs),
             "prospects_total": len(self.prospects),
             "jobs_by_status": {"new": len(self.jobs)},
             "prospects_by_status": {"new": len(self.prospects)},
-            "recent_progress": [e.model_dump(mode="json") for e in self.events[:20]],
+            "recent_progress": dump_progress_with_labels(self.events[:20], labels),
         }
 
     def list_jobs(self, **_: Any) -> list[JobRead]:
@@ -193,6 +201,10 @@ def test_create_job_and_progress(client: TestClient) -> None:
     assert progress.json()["status"] == "applied"
     listed = client.get("/api/jobs", headers=_auth())
     assert listed.json()[0]["status"] == "applied"
+    board = client.get("/api/dashboard", headers=_auth())
+    recent = board.json()["recent_progress"]
+    assert recent[0]["title"] == "Data Engineer"
+    assert recent[0]["company_name"] == "Harbor"
 
 
 def test_create_prospect_and_progress(client: TestClient) -> None:

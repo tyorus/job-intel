@@ -19,6 +19,7 @@ from jobintel.models import (
     ProgressEvent,
     Prospect,
     ProspectStatus,
+    dump_progress_with_labels,
 )
 from jobintel.text import clean_description
 
@@ -435,8 +436,45 @@ class Store:
             "prospects_total": len(prospects),
             "jobs_by_status": job_counts,
             "prospects_by_status": prospect_counts,
-            "recent_progress": [event.model_dump(mode="json") for event in recent],
+            "recent_progress": dump_progress_with_labels(recent, self._progress_labels(recent)),
         }
+
+    def _progress_labels(
+        self, events: list[ProgressEvent]
+    ) -> dict[str, tuple[str | None, str | None]]:
+        job_ids = [
+            str(event.entity_id)
+            for event in events
+            if event.entity_type == ProgressEntityType.JOB
+        ]
+        prospect_ids = [
+            str(event.entity_id)
+            for event in events
+            if event.entity_type == ProgressEntityType.PROSPECT
+        ]
+        labels: dict[str, tuple[str | None, str | None]] = {}
+        if job_ids:
+            result = (
+                self.client.table("jobs")
+                .select("id, title, company_id")
+                .in_("id", job_ids)
+                .execute()
+            )
+            rows = result.data or []
+            names = self._company_map([str(row.get("company_id") or "") for row in rows])
+            for row in rows:
+                company_id = str(row.get("company_id") or "")
+                labels[str(row["id"])] = (row.get("title"), names.get(company_id))
+        if prospect_ids:
+            result = (
+                self.client.table("prospects")
+                .select("id, name, company")
+                .in_("id", prospect_ids)
+                .execute()
+            )
+            for row in result.data or []:
+                labels[str(row["id"])] = (row.get("name"), row.get("company"))
+        return labels
 
     def _insert_progress(
         self,

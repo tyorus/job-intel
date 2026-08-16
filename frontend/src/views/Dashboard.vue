@@ -45,14 +45,21 @@
     <div class="card">
       <h2>Recent progress</h2>
       <div class="timeline">
-        <div v-for="event in data.recent_progress || []" :key="event.id" class="event">
+        <router-link
+          v-for="event in data.recent_progress || []"
+          :key="event.id"
+          :to="progressPath(event)"
+          class="event clickable"
+        >
           <div class="row">
             <StatusPill :value="event.status" />
+            <span class="event-title">{{ event.title || fallbackTitle(event) }}</span>
             <span class="mono muted">{{ event.entity_type }}</span>
             <span class="muted">{{ formatWhen(event.created_at) }}</span>
           </div>
+          <p v-if="event.company_name" class="muted">{{ event.company_name }}</p>
           <p v-if="event.note">{{ event.note }}</p>
-        </div>
+        </router-link>
         <p v-if="!(data.recent_progress || []).length" class="muted">No updates logged.</p>
       </div>
     </div>
@@ -77,6 +84,15 @@ const activeProspects = computed(() => {
     0,
   );
 });
+
+function progressPath(event) {
+  if (event.entity_type === "prospect") return `/prospects/${event.entity_id}`;
+  return `/jobs/${event.entity_id}`;
+}
+
+function fallbackTitle(event) {
+  return event.entity_type === "prospect" ? "Untitled prospect" : "Untitled job";
+}
 
 onMounted(async () => {
   try {

@@ -19,6 +19,7 @@ from jobintel.models import (
     ProgressEvent,
     Prospect,
     ProspectStatus,
+    dump_progress_with_labels,
 )
 from jobintel.text import clean_description
 
@@ -618,8 +619,38 @@ class SqliteStore:
             "prospects_total": len(prospects),
             "jobs_by_status": job_counts,
             "prospects_by_status": prospect_counts,
-            "recent_progress": [event.model_dump(mode="json") for event in recent],
+            "recent_progress": dump_progress_with_labels(recent, self._progress_labels(recent)),
         }
+
+    def _progress_labels(
+        self, events: list[ProgressEvent]
+    ) -> dict[str, tuple[str | None, str | None]]:
+        job_ids = [
+            str(event.entity_id)
+            for event in events
+            if event.entity_type == ProgressEntityType.JOB
+        ]
+        prospect_ids = [
+            str(event.entity_id)
+            for event in events
+            if event.entity_type == ProgressEntityType.PROSPECT
+        ]
+        labels: dict[str, tuple[str | None, str | None]] = {}
+        if job_ids:
+            placeholders = ",".join("?" * len(job_ids))
+            for row in self._rows(
+                f"select id, title, company_name from jobs where id in ({placeholders})",
+                tuple(job_ids),
+            ):
+                labels[str(row["id"])] = (row["title"], row["company_name"])
+        if prospect_ids:
+            placeholders = ",".join("?" * len(prospect_ids))
+            for row in self._rows(
+                f"select id, name, company from prospects where id in ({placeholders})",
+                tuple(prospect_ids),
+            ):
+                labels[str(row["id"])] = (row["name"], row["company"])
+        return labels
 
     def _insert_progress(
         self,
