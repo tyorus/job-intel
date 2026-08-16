@@ -14,8 +14,12 @@
       </label>
     </div>
     <div class="row" style="margin-top: 0.8rem">
-      <button type="submit" :disabled="busy">Save update</button>
-      <span v-if="error" class="flash">{{ error }}</span>
+      <button type="submit" :disabled="busy">
+        {{ busy ? "Saving…" : "Save update" }}
+      </button>
+      <span v-if="busy" class="muted" aria-live="polite">Saving changes…</span>
+      <span v-else-if="saved" class="ok" aria-live="polite">Saved.</span>
+      <span v-else-if="error" class="flash">{{ error }}</span>
     </div>
   </form>
 </template>
@@ -34,6 +38,8 @@ const status = ref(props.current);
 const note = ref("");
 const busy = ref(false);
 const error = ref("");
+const saved = ref(false);
+let savedTimer;
 
 watch(
   () => props.current,
@@ -45,9 +51,15 @@ watch(
 async function submit() {
   busy.value = true;
   error.value = "";
+  saved.value = false;
   try {
     await props.save({ status: status.value, note: note.value || null });
     note.value = "";
+    saved.value = true;
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => {
+      saved.value = false;
+    }, 4000);
   } catch (err) {
     error.value = err.message || "Failed";
   } finally {

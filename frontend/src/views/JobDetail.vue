@@ -95,8 +95,12 @@
         <label class="span-2">Apply URL <input v-model="edit.apply_url" type="url" /></label>
       </div>
       <div class="row" style="margin-top: 0.8rem">
-        <button type="submit" :disabled="saving">Save metadata</button>
-        <span v-if="metaError" class="flash">{{ metaError }}</span>
+        <button type="submit" :disabled="saving">
+          {{ saving ? "Saving…" : "Save metadata" }}
+        </button>
+        <span v-if="saving" class="muted" aria-live="polite">Saving changes…</span>
+        <span v-else-if="metaSaved" class="ok" aria-live="polite">Saved.</span>
+        <span v-else-if="metaError" class="flash">{{ metaError }}</span>
       </div>
     </form>
 
@@ -142,7 +146,9 @@ const job = ref(null);
 const events = ref([]);
 const error = ref("");
 const metaError = ref("");
+const metaSaved = ref(false);
 const saving = ref(false);
+let savedTimer;
 const edit = reactive({
   posted_at: "",
   deadline_at: "",
@@ -203,6 +209,7 @@ async function onProgress(payload) {
 async function saveMeta() {
   saving.value = true;
   metaError.value = "";
+  metaSaved.value = false;
   try {
     const tags = edit.tags
       .split(",")
@@ -222,6 +229,11 @@ async function saveMeta() {
       }),
     });
     syncEdit(job.value);
+    metaSaved.value = true;
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => {
+      metaSaved.value = false;
+    }, 4000);
   } catch (err) {
     metaError.value = err.message;
   } finally {

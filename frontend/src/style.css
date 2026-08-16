@@ -472,8 +472,19 @@ button.row-action {
   width: min(420px, 100%);
 }
 
+button:disabled,
+.btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .flash {
   color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.ok {
+  color: var(--accent-2);
   font-size: 0.9rem;
 }
 
