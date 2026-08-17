@@ -10,8 +10,21 @@
       </button>
     </div>
 
-    <form v-if="showForm" class="card" style="margin: 1rem 0" @submit.prevent="createJob">
+    <form
+      v-if="showForm"
+      class="card form-card"
+      style="margin: 1rem 0"
+      :aria-busy="saving"
+      @submit.prevent="createJob"
+    >
+      <div v-if="saving" class="form-saving" aria-live="polite">
+        <span class="form-saving-msg">
+          <span class="form-saving-dot" aria-hidden="true"></span>
+          Saving job…
+        </span>
+      </div>
       <h2>Manual job (LinkedIn OK)</h2>
+      <fieldset :disabled="saving" class="form-fields">
       <div class="form-grid">
         <label>Title <input v-model="form.title" required /></label>
         <label>Company <input v-model="form.company_name" /></label>
@@ -53,12 +66,12 @@
         </label>
       </div>
       <div class="row" style="margin-top: 0.8rem">
-        <button type="submit" :disabled="saving">
+        <button type="submit">
           {{ saving ? "Saving…" : "Save job" }}
         </button>
-        <span v-if="saving" class="muted" aria-live="polite">Saving job…</span>
-        <span v-else-if="formError" class="flash">{{ formError }}</span>
+        <span v-if="formError" class="flash">{{ formError }}</span>
       </div>
+      </fieldset>
     </form>
 
     <div class="toolbar">
@@ -220,7 +233,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "../api";
 import StatusPill from "../components/StatusPill.vue";
@@ -436,6 +449,7 @@ async function markSelectedNotRelated() {
 async function createJob() {
   formError.value = "";
   saving.value = true;
+  await nextTick();
   try {
     const tags = form.tags
       .split(",")
@@ -462,6 +476,7 @@ async function createJob() {
         remote_type: "remote",
       }),
     });
+    await load();
     Object.assign(form, {
       title: "",
       company_name: "",
@@ -478,7 +493,6 @@ async function createJob() {
       tags: "",
     });
     showForm.value = false;
-    await load();
   } catch (err) {
     formError.value = err.message;
   } finally {
