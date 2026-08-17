@@ -5,7 +5,7 @@
         <h1>Jobs</h1>
         <p class="muted">Scraped boards plus manual LinkedIn / URL paste.</p>
       </div>
-      <button type="button" class="secondary" @click="showForm = !showForm">
+      <button type="button" class="secondary" :disabled="saving" @click="showForm = !showForm">
         {{ showForm ? "Hide form" : "Add job" }}
       </button>
     </div>
@@ -53,8 +53,11 @@
         </label>
       </div>
       <div class="row" style="margin-top: 0.8rem">
-        <button type="submit">Save job</button>
-        <span v-if="formError" class="flash">{{ formError }}</span>
+        <button type="submit" :disabled="saving">
+          {{ saving ? "Saving…" : "Save job" }}
+        </button>
+        <span v-if="saving" class="muted" aria-live="polite">Saving job…</span>
+        <span v-else-if="formError" class="flash">{{ formError }}</span>
       </div>
     </form>
 
@@ -241,6 +244,7 @@ const sortKey = ref("listed");
 const sortDir = ref("desc");
 const error = ref("");
 const formError = ref("");
+const saving = ref(false);
 const showForm = ref(false);
 const marking = ref(new Set());
 const selected = ref(new Set());
@@ -431,6 +435,7 @@ async function markSelectedNotRelated() {
 
 async function createJob() {
   formError.value = "";
+  saving.value = true;
   try {
     const tags = form.tags
       .split(",")
@@ -476,6 +481,8 @@ async function createJob() {
     await load();
   } catch (err) {
     formError.value = err.message;
+  } finally {
+    saving.value = false;
   }
 }
 
