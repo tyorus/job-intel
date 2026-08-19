@@ -15,6 +15,8 @@ from jobintel.models import (
     Job,
     JobRead,
     JobStatus,
+    Post,
+    PostStatus,
     ProgressEntityType,
     ProgressEvent,
     Prospect,
@@ -123,10 +125,31 @@ class SqliteStore:
               content_hash text unique,
               created_at text not null
             );
+            create table if not exists posts (
+              id text primary key,
+              title text not null,
+              summary text,
+              body text,
+              tags text not null default '[]',
+              cover_url text,
+              canonical_url text,
+              notes text,
+              metadata_json text not null default '{}',
+              media_json text not null default '[]',
+              channels text not null default '[]',
+              web_url text,
+              linkedin_url text,
+              scheduled_at text,
+              published_at text,
+              status text not null default 'idea',
+              created_at text not null,
+              updated_at text not null
+            );
             """
         )
         self._conn.commit()
         self._ensure_job_columns()
+        self._ensure_posts_table()
         self._purge_not_related_jobs()
 
     def _ensure_job_columns(self) -> None:
@@ -147,6 +170,31 @@ class SqliteStore:
         for name, ddl in additions.items():
             if name not in existing:
                 self._conn.execute(f"alter table jobs add column {name} {ddl}")
+        self._conn.commit()
+
+    def _ensure_posts_table(self) -> None:
+        existing = {row["name"] for row in self._rows("pragma table_info(posts)")}
+        if not existing:
+            return
+        additions = {
+            "summary": "text",
+            "body": "text",
+            "tags": "text not null default '[]'",
+            "cover_url": "text",
+            "canonical_url": "text",
+            "notes": "text",
+            "metadata_json": "text not null default '{}'",
+            "media_json": "text not null default '[]'",
+            "channels": "text not null default '[]'",
+            "web_url": "text",
+            "linkedin_url": "text",
+            "scheduled_at": "text",
+            "published_at": "text",
+            "status": "text not null default 'idea'",
+        }
+        for name, ddl in additions.items():
+            if name not in existing:
+                self._conn.execute(f"alter table posts add column {name} {ddl}")
         self._conn.commit()
 
     def _row(self, query: str, params: tuple[Any, ...] = ()) -> sqlite3.Row | None:
@@ -353,11 +401,14 @@ class SqliteStore:
             for row in self._rows("select content_hash from jobs where content_hash is not null")
         }
         urls.update(
-            str(row["url"]) for row in self._rows("select url from dismissed_jobs where url is not null")
+            str(row["url"])
+            for row in self._rows("select url from dismissed_jobs where url is not null")
         )
         hashes.update(
             str(row["content_hash"])
-            for row in self._rows("select content_hash from dismissed_jobs where content_hash is not null")
+            for row in self._rows(
+                "select content_hash from dismissed_jobs where content_hash is not null"
+            )
         )
         return urls, hashes
 
@@ -571,6 +622,153 @@ class SqliteStore:
             ProgressEntityType.PROSPECT, prospect_id, status.value, note
         )
 
+    def list_posts(
+        self,
+        *,
+        status: str | None = None,
+        channel: str | None = None,
+        q: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Post]:
+        clauses = ["1=1"]
+        params: list[Any] = []
+        if status:
+            clauses.append("status = ?")
+            params.append(status)
+        if channel:
+            clauses.append("channels like ?")
+            params.append(f'%"{channel}"%')
+        if q:
+            clauses.append(
+                "(title like ? or ifnull(summary,'') like ? or ifnull(body,'') like ?)"
+            )
+            like = f"%{q}%"
+            params.extend([like, like, like])
+        params.extend([limit, offset])
+        rows = self._rows(
+            f"""
+            select * from posts
+            where {" and ".join(clauses)}
+            order by updated_at desc
+            limit ? offset ?
+            """,
+            tuple(params),
+        )
+        return [self._post_from_row(row) for row in rows]
+
+    def _post_from_row(self, row: sqlite3.Row) -> Post:
+        data = dict(row)
+        json_defaults: tuple[tuple[str, list[Any] | dict[str, Any]], ...] = (
+            ("tags", []),
+            ("channels", []),
+            ("media_json", []),
+            ("metadata_json", {}),
+        )
+        for key, empty in json_defaults:
+            value = data.get(key)
+            if isinstance(value, str):
+                try:
+                    data[key] = json.loads(value or json.dumps(empty))
+                except json.JSONDecodeError:
+                    data[key] = empty
+            elif value is None:
+                data[key] = empty
+        return Post.model_validate(data)
+
+    def get_post(self, post_id: UUID) -> Post | None:
+        row = self._row("select * from posts where id = ?", (str(post_id),))
+        return self._post_from_row(row) if row else None
+
+    def create_post(self, post: Post) -> Post:
+        now = _iso(_now())
+        post_id = post.id or uuid4()
+        payload = post.model_dump(mode="json")
+        self._conn.execute(
+            """
+            insert into posts (
+              id, title, summary, body, tags, cover_url, canonical_url, notes,
+              metadata_json, media_json, channels, web_url, linkedin_url,
+              scheduled_at, published_at, status, created_at, updated_at
+            ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(post_id),
+                payload["title"],
+                payload.get("summary"),
+                payload.get("body"),
+                json.dumps(payload.get("tags") or []),
+                payload.get("cover_url"),
+                payload.get("canonical_url"),
+                payload.get("notes"),
+                json.dumps(payload.get("metadata_json") or {}),
+                json.dumps(payload.get("media_json") or []),
+                json.dumps(payload.get("channels") or []),
+                payload.get("web_url"),
+                payload.get("linkedin_url"),
+                payload.get("scheduled_at"),
+                payload.get("published_at"),
+                payload["status"],
+                now,
+                now,
+            ),
+        )
+        self._conn.commit()
+        created = self.get_post(post_id)
+        assert created is not None
+        self._insert_progress(
+            ProgressEntityType.POST,
+            post_id,
+            created.status.value,
+            post.notes,
+        )
+        return created
+
+    def update_post(self, post_id: UUID, fields: dict[str, Any]) -> Post:
+        if not self.get_post(post_id):
+            raise KeyError(f"post not found: {post_id}")
+        if not fields:
+            found = self.get_post(post_id)
+            assert found is not None
+            return found
+        columns = []
+        values: list[Any] = []
+        json_keys = {"tags", "channels", "media_json", "metadata_json"}
+        for key, value in fields.items():
+            if key in json_keys and not isinstance(value, str):
+                value = json.dumps(value)
+            elif isinstance(value, (datetime, date)):
+                value = value.isoformat()
+            elif hasattr(value, "value"):
+                value = value.value
+            columns.append(f"{key} = ?")
+            values.append(value)
+        columns.append("updated_at = ?")
+        values.append(_iso(_now()))
+        values.append(str(post_id))
+        self._conn.execute(
+            f"update posts set {', '.join(columns)} where id = ?",
+            tuple(values),
+        )
+        self._conn.commit()
+        updated = self.get_post(post_id)
+        assert updated is not None
+        return updated
+
+    def submit_post_progress(
+        self, post_id: UUID, status: PostStatus, note: str | None = None
+    ) -> ProgressEvent:
+        current = self.get_post(post_id)
+        if current is None:
+            raise KeyError(f"post not found: {post_id}")
+        fields: dict[str, Any] = {"status": status.value}
+        if note:
+            fields["notes"] = note
+        if status == PostStatus.PUBLISHED and not current.published_at:
+            fields["published_at"] = _iso(_now())
+        self.update_post(post_id, fields)
+        return self._insert_progress(ProgressEntityType.POST, post_id, status.value, note)
+
     def list_progress(
         self,
         *,
@@ -605,20 +803,27 @@ class SqliteStore:
     def dashboard(self) -> dict[str, Any]:
         jobs = self._rows("select status from jobs")
         prospects = self._rows("select status from prospects")
+        posts = self._rows("select status from posts")
         job_counts: dict[str, int] = {}
         prospect_counts: dict[str, int] = {}
+        post_counts: dict[str, int] = {}
         for row in jobs:
             key = str(row["status"] or "unknown")
             job_counts[key] = job_counts.get(key, 0) + 1
         for row in prospects:
             key = str(row["status"] or "unknown")
             prospect_counts[key] = prospect_counts.get(key, 0) + 1
+        for row in posts:
+            key = str(row["status"] or "unknown")
+            post_counts[key] = post_counts.get(key, 0) + 1
         recent = self.list_progress(limit=20)
         return {
             "jobs_total": len(jobs),
             "prospects_total": len(prospects),
+            "posts_total": len(posts),
             "jobs_by_status": job_counts,
             "prospects_by_status": prospect_counts,
+            "posts_by_status": post_counts,
             "recent_progress": dump_progress_with_labels(recent, self._progress_labels(recent)),
         }
 
@@ -635,6 +840,11 @@ class SqliteStore:
             for event in events
             if event.entity_type == ProgressEntityType.PROSPECT
         ]
+        post_ids = [
+            str(event.entity_id)
+            for event in events
+            if event.entity_type == ProgressEntityType.POST
+        ]
         labels: dict[str, tuple[str | None, str | None]] = {}
         if job_ids:
             placeholders = ",".join("?" * len(job_ids))
@@ -650,6 +860,20 @@ class SqliteStore:
                 tuple(prospect_ids),
             ):
                 labels[str(row["id"])] = (row["name"], row["company"])
+        if post_ids:
+            placeholders = ",".join("?" * len(post_ids))
+            for row in self._rows(
+                f"select id, title, channels from posts where id in ({placeholders})",
+                tuple(post_ids),
+            ):
+                channels = row["channels"]
+                if isinstance(channels, str):
+                    try:
+                        channels = json.loads(channels or "[]")
+                    except json.JSONDecodeError:
+                        channels = []
+                subtitle = " · ".join(channels) if channels else None
+                labels[str(row["id"])] = (row["title"], subtitle)
         return labels
 
     def _insert_progress(

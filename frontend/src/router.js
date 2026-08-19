@@ -6,6 +6,8 @@ import Jobs from "./views/Jobs.vue";
 import JobDetail from "./views/JobDetail.vue";
 import Prospects from "./views/Prospects.vue";
 import ProspectDetail from "./views/ProspectDetail.vue";
+import Posts from "./views/Posts.vue";
+import PostDetail from "./views/PostDetail.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -16,6 +18,8 @@ const router = createRouter({
     { path: "/jobs/:id", component: JobDetail },
     { path: "/prospects", component: Prospects },
     { path: "/prospects/:id", component: ProspectDetail },
+    { path: "/posts", component: Posts },
+    { path: "/posts/:id", component: PostDetail },
   ],
 });
 

@@ -10,6 +10,17 @@
       </button>
     </div>
 
+    <p v-if="listNotice" class="ok" aria-live="polite">{{ listNotice }}</p>
+
+    <Teleport to="body">
+      <div v-if="saving" class="save-overlay" role="status" aria-live="assertive">
+        <span class="form-saving-msg">
+          <span v-if="saveStatus === 'saving'" class="form-saving-dot" aria-hidden="true"></span>
+          {{ saveStatus === "saved" ? "Job saved." : "Saving job…" }}
+        </span>
+      </div>
+    </Teleport>
+
     <form
       v-if="showForm"
       class="card form-card"
@@ -17,12 +28,6 @@
       :aria-busy="saving"
       @submit.prevent="createJob"
     >
-      <div v-if="saving" class="form-saving" aria-live="polite">
-        <span class="form-saving-msg">
-          <span class="form-saving-dot" aria-hidden="true"></span>
-          Saving job…
-        </span>
-      </div>
       <h2>Manual job (LinkedIn OK)</h2>
       <fieldset :disabled="saving" class="form-fields">
       <div class="form-grid">
@@ -258,6 +263,8 @@ const sortDir = ref("desc");
 const error = ref("");
 const formError = ref("");
 const saving = ref(false);
+const saveStatus = ref("saving");
+const listNotice = ref("");
 const showForm = ref(false);
 const marking = ref(new Set());
 const selected = ref(new Set());
@@ -446,10 +453,36 @@ async function markSelectedNotRelated() {
   }
 }
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function resetForm() {
+  Object.assign(form, {
+    title: "",
+    company_name: "",
+    url: "",
+    apply_url: "",
+    description: "",
+    notes: "",
+    posted_at: "",
+    deadline_at: "",
+    salary_text: "",
+    employment_type: "",
+    department: "",
+    seniority: "",
+    tags: "",
+  });
+}
+
 async function createJob() {
   formError.value = "";
+  listNotice.value = "";
+  saveStatus.value = "saving";
   saving.value = true;
   await nextTick();
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+  const started = Date.now();
   try {
     const tags = form.tags
       .split(",")
@@ -477,22 +510,13 @@ async function createJob() {
       }),
     });
     await load();
-    Object.assign(form, {
-      title: "",
-      company_name: "",
-      url: "",
-      apply_url: "",
-      description: "",
-      notes: "",
-      posted_at: "",
-      deadline_at: "",
-      salary_text: "",
-      employment_type: "",
-      department: "",
-      seniority: "",
-      tags: "",
-    });
+    const remaining = 800 - (Date.now() - started);
+    if (remaining > 0) await wait(remaining);
+    saveStatus.value = "saved";
+    await wait(1000);
+    resetForm();
     showForm.value = false;
+    listNotice.value = "Job saved.";
   } catch (err) {
     formError.value = err.message;
   } finally {

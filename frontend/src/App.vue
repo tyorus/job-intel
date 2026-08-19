@@ -11,12 +11,13 @@
     <header class="topbar">
       <div class="brand">
         <strong>Tyorus Pipeline</strong>
-        <span>jobs · services prospects</span>
+        <span>jobs · prospects · posts</span>
       </div>
       <nav>
         <router-link to="/">Board</router-link>
         <router-link to="/jobs">Jobs</router-link>
         <router-link to="/prospects">Prospects</router-link>
+        <router-link to="/posts">Posts</router-link>
       </nav>
       <div class="top-actions">
         <button class="ghost theme-toggle" type="button" :title="themeTitle" @click="toggleTheme">

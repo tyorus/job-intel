@@ -23,6 +23,12 @@ export const PROSPECT_STATUSES = [
   "cancelled",
 ];
 
+export const POST_STATUSES = ["idea", "draft", "scheduled", "published", "archived"];
+
+export const POST_CHANNELS = ["web", "linkedin"];
+
+export const MEDIA_KINDS = ["image", "video", "document"];
+
 export const PACKAGES = ["unknown", "audit", "brief", "retainer"];
 
 export const PACKAGE_LABELS = {
@@ -81,7 +87,7 @@ export function sortMark(activeKey, key, dir) {
 }
 
 export function defaultSortDir(key) {
-  if (["title", "company", "name", "deadline", "follow_up"].includes(key)) return "asc";
+  if (["title", "company", "name", "deadline", "follow_up", "published"].includes(key)) return "asc";
   return "desc";
 }
 

@@ -64,9 +64,29 @@ class ServicePackage(StrEnum):
     UNKNOWN = "unknown"
 
 
+class PostStatus(StrEnum):
+    IDEA = "idea"
+    DRAFT = "draft"
+    SCHEDULED = "scheduled"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
+class PublishChannel(StrEnum):
+    WEB = "web"
+    LINKEDIN = "linkedin"
+
+
+class MediaKind(StrEnum):
+    IMAGE = "image"
+    VIDEO = "video"
+    DOCUMENT = "document"
+
+
 class ProgressEntityType(StrEnum):
     JOB = "job"
     PROSPECT = "prospect"
+    POST = "post"
 
 
 class ScoreBand(StrEnum):
@@ -238,6 +258,33 @@ class Prospect(BaseModel):
     updated_at: datetime | None = None
 
 
+class PostMedia(BaseModel):
+    kind: MediaKind = MediaKind.IMAGE
+    url: str
+    caption: str | None = None
+
+
+class Post(BaseModel):
+    id: UUID | None = None
+    title: str
+    summary: str | None = None
+    body: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    cover_url: str | None = None
+    canonical_url: str | None = None
+    notes: str | None = None
+    metadata_json: dict[str, Any] = Field(default_factory=dict)
+    media_json: list[PostMedia] = Field(default_factory=list)
+    channels: list[PublishChannel] = Field(default_factory=list)
+    web_url: str | None = None
+    linkedin_url: str | None = None
+    scheduled_at: datetime | None = None
+    published_at: datetime | None = None
+    status: PostStatus = PostStatus.IDEA
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
 class ProgressEvent(BaseModel):
     id: UUID | None = None
     entity_type: ProgressEntityType
@@ -251,7 +298,7 @@ def dump_progress_with_labels(
     events: list[ProgressEvent],
     labels: dict[str, tuple[str | None, str | None]],
 ) -> list[dict[str, Any]]:
-    """Serialize progress events with job title / prospect name attached."""
+    """Serialize progress events with job title / prospect name / post title attached."""
     payload: list[dict[str, Any]] = []
     for event in events:
         title, company_name = labels.get(str(event.entity_id), (None, None))

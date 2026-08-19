@@ -1,7 +1,7 @@
 <template>
   <section>
     <h1>Board</h1>
-    <p class="muted">Hourly public scrape plus manual LinkedIn and client-prospect updates.</p>
+    <p class="muted">Hourly public scrape, client prospects, and article publishes.</p>
     <div v-if="error" class="flash">{{ error }}</div>
     <div class="grid-stats" style="margin: 1rem 0 1.4rem">
       <article class="card">
@@ -13,12 +13,20 @@
         <h2>{{ data.prospects_total || 0 }}</h2>
       </article>
       <article class="card">
+        <p class="mono muted">Posts</p>
+        <h2>{{ data.posts_total || 0 }}</h2>
+      </article>
+      <article class="card">
         <p class="mono muted">Applied / interview</p>
         <h2>{{ (data.jobs_by_status?.applied || 0) + (data.jobs_by_status?.interview || 0) }}</h2>
       </article>
       <article class="card">
         <p class="mono muted">Active conversations</p>
         <h2>{{ activeProspects }}</h2>
+      </article>
+      <article class="card">
+        <p class="mono muted">Published posts</p>
+        <h2>{{ data.posts_by_status?.published || 0 }}</h2>
       </article>
     </div>
 
@@ -39,6 +47,16 @@
           {{ labelize(status) }} · {{ count }}
         </span>
         <span v-if="!Object.keys(data.prospects_by_status || {}).length" class="muted">No prospects yet.</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1rem">
+      <h2>Posts by status</h2>
+      <div class="row">
+        <span v-for="(count, status) in data.posts_by_status || {}" :key="status" class="pill" :class="status">
+          {{ labelize(status) }} · {{ count }}
+        </span>
+        <span v-if="!Object.keys(data.posts_by_status || {}).length" class="muted">No posts yet.</span>
       </div>
     </div>
 
@@ -87,11 +105,14 @@ const activeProspects = computed(() => {
 
 function progressPath(event) {
   if (event.entity_type === "prospect") return `/prospects/${event.entity_id}`;
+  if (event.entity_type === "post") return `/posts/${event.entity_id}`;
   return `/jobs/${event.entity_id}`;
 }
 
 function fallbackTitle(event) {
-  return event.entity_type === "prospect" ? "Untitled prospect" : "Untitled job";
+  if (event.entity_type === "prospect") return "Untitled prospect";
+  if (event.entity_type === "post") return "Untitled post";
+  return "Untitled job";
 }
 
 onMounted(async () => {

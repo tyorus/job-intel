@@ -8,7 +8,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from jobintel.models import ProspectStatus, RemoteType, ServicePackage
+from jobintel.models import (
+    PostMedia,
+    PostStatus,
+    ProspectStatus,
+    PublishChannel,
+    RemoteType,
+    ServicePackage,
+)
 
 
 class JobCreate(BaseModel):
@@ -85,6 +92,41 @@ class ProspectUpdate(BaseModel):
     next_action: str | None = None
     value_estimate_usd: float | None = None
     notes: str | None = None
+
+
+class PostCreate(BaseModel):
+    title: str
+    summary: str | None = None
+    body: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    cover_url: str | None = None
+    canonical_url: str | None = None
+    notes: str | None = None
+    metadata_json: dict[str, Any] = Field(default_factory=dict)
+    media_json: list[PostMedia] = Field(default_factory=list)
+    channels: list[PublishChannel] = Field(default_factory=list)
+    web_url: str | None = None
+    linkedin_url: str | None = None
+    scheduled_at: datetime | None = None
+    published_at: datetime | None = None
+    status: PostStatus = PostStatus.IDEA
+
+
+class PostUpdate(BaseModel):
+    title: str | None = None
+    summary: str | None = None
+    body: str | None = None
+    tags: list[str] | None = None
+    cover_url: str | None = None
+    canonical_url: str | None = None
+    notes: str | None = None
+    metadata_json: dict[str, Any] | None = None
+    media_json: list[PostMedia] | None = None
+    channels: list[PublishChannel] | None = None
+    web_url: str | None = None
+    linkedin_url: str | None = None
+    scheduled_at: datetime | None = None
+    published_at: datetime | None = None
 
 
 class ProgressIn(BaseModel):

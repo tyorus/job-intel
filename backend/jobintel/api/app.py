@@ -1,4 +1,4 @@
-"""FastAPI app: tracker CRUD for jobs and client prospects."""
+"""FastAPI app: tracker CRUD for jobs, client prospects, and posts."""
 
 from __future__ import annotations
 
@@ -15,13 +15,23 @@ from jobintel.api.schemas import (
     JobCreate,
     JobDismissIn,
     JobUpdate,
+    PostCreate,
+    PostUpdate,
     ProgressIn,
     ProspectCreate,
     ProspectUpdate,
 )
 from jobintel.config import Settings, get_settings
 from jobintel.db import get_store as build_store
-from jobintel.models import Job, JobStatus, ProgressEntityType, Prospect, ProspectStatus
+from jobintel.models import (
+    Job,
+    JobStatus,
+    Post,
+    PostStatus,
+    ProgressEntityType,
+    Prospect,
+    ProspectStatus,
+)
 
 app = FastAPI(title="Job Intelligence Tracker", version="0.1.0")
 
@@ -235,6 +245,61 @@ def prospect_progress(_: Auth, store: Db, prospect_id: UUID, body: ProgressIn) -
         event = store.submit_prospect_progress(prospect_id, status_value, body.note)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Prospect not found") from exc
+    return event.model_dump(mode="json")
+
+
+@app.get("/api/posts")
+def list_posts(
+    _: Auth,
+    store: Db,
+    status_filter: Annotated[str | None, Query(alias="status")] = None,
+    channel: str | None = None,
+    q: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> list[dict]:
+    rows = store.list_posts(
+        status=status_filter, channel=channel, q=q, limit=limit, offset=offset
+    )
+    return [row.model_dump(mode="json") for row in rows]
+
+
+@app.get("/api/posts/{post_id}")
+def get_post(_: Auth, store: Db, post_id: UUID) -> dict:
+    row = store.get_post(post_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return row.model_dump(mode="json")
+
+
+@app.post("/api/posts", status_code=201)
+def create_post(_: Auth, store: Db, body: PostCreate) -> dict:
+    created = store.create_post(Post.model_validate(body.model_dump()))
+    return created.model_dump(mode="json")
+
+
+@app.patch("/api/posts/{post_id}")
+def update_post(_: Auth, store: Db, post_id: UUID, body: PostUpdate) -> dict:
+    fields = body.model_dump(mode="json", exclude_unset=True)
+    try:
+        updated = store.update_post(post_id, fields)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Post not found") from exc
+    return updated.model_dump(mode="json")
+
+
+@app.post("/api/posts/{post_id}/progress", status_code=201)
+def post_progress(_: Auth, store: Db, post_id: UUID, body: ProgressIn) -> dict:
+    try:
+        status_value = PostStatus(body.status)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid post status: {body.status}"
+        ) from exc
+    try:
+        event = store.submit_post_progress(post_id, status_value, body.note)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Post not found") from exc
     return event.model_dump(mode="json")
 
 

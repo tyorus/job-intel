@@ -1,6 +1,6 @@
 # Job Intelligence
 
-Personal **Job Intelligence & pipeline tracker**: discover remote jobs from public boards, log LinkedIn roles by hand, track applications, and run a client-prospect pipeline.
+Personal **Job Intelligence & pipeline tracker**: discover remote jobs from public boards, log LinkedIn roles by hand, track applications, run a client-prospect pipeline, and log articles published to the web or LinkedIn.
 
 **No auto-apply. No LinkedIn scraping.** GitHub Pages is not used — the Vue app deploys to Vercel.
 
@@ -8,7 +8,7 @@ Personal **Job Intelligence & pipeline tracker**: discover remote jobs from publ
 
 ```text
 career_data/*.yaml     →  jobintel.career (load/validate)
-Supabase               →  companies / jobs / applications / prospects / progress_events
+Supabase               →  companies / jobs / applications / prospects / posts / progress_events
 FastAPI (Vercel /api)  →  CRUD + progress
 Vue 3 (Vercel)         →  tracker dashboard
 GitHub Actions hourly  →  jobintel scrape → Supabase
@@ -20,7 +20,7 @@ Public boards (RemoteOK, Arbeitnow, Greenhouse, Lever, RSS)
         ▼
     Supabase jobs (status=new, dedup url/hash)
         │
-Vue  +  FastAPI  →  progress_events, applications, prospects
+Vue  +  FastAPI  →  progress_events, applications, prospects, posts
 ```
 
 ## Prerequisites
@@ -103,6 +103,7 @@ Verified facts live in `career_data/` (seeded from [tyorus.com/resume](https://t
 | --- | --- |
 | M1 structure, models, career YAML, SQL schema | **done** |
 | Tracker: prospects + progress events | **done** |
+| Tracker: posts (web / LinkedIn articles) | **done** |
 | FastAPI CRUD + API key | **done** |
 | Vue dashboard (Vercel) | **done** |
 | Hourly public scrape (GitHub Actions) | **done** |

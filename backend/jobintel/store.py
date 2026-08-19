@@ -1,4 +1,4 @@
-"""Supabase persistence for jobs, prospects, and progress events."""
+"""Supabase persistence for jobs, prospects, posts, and progress events."""
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ from jobintel.models import (
     Job,
     JobRead,
     JobStatus,
+    Post,
+    PostStatus,
     ProgressEntityType,
     ProgressEvent,
     Prospect,
@@ -399,6 +401,113 @@ class Store:
             ProgressEntityType.PROSPECT, prospect_id, status.value, note
         )
 
+    # --- posts -------------------------------------------------------------
+
+    def _to_post(self, row: dict[str, Any]) -> Post:
+        data = dict(row)
+        tags = data.get("tags")
+        if isinstance(tags, str):
+            try:
+                data["tags"] = json.loads(tags)
+            except json.JSONDecodeError:
+                data["tags"] = []
+        elif tags is None:
+            data["tags"] = []
+        channels = data.get("channels")
+        if isinstance(channels, str):
+            try:
+                data["channels"] = json.loads(channels)
+            except json.JSONDecodeError:
+                data["channels"] = []
+        elif channels is None:
+            data["channels"] = []
+        media = data.get("media_json")
+        if isinstance(media, str):
+            try:
+                data["media_json"] = json.loads(media)
+            except json.JSONDecodeError:
+                data["media_json"] = []
+        elif media is None:
+            data["media_json"] = []
+        meta = data.get("metadata_json")
+        if isinstance(meta, str):
+            try:
+                data["metadata_json"] = json.loads(meta)
+            except json.JSONDecodeError:
+                data["metadata_json"] = {}
+        elif meta is None:
+            data["metadata_json"] = {}
+        return Post.model_validate(data)
+
+    def list_posts(
+        self,
+        *,
+        status: str | None = None,
+        channel: str | None = None,
+        q: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Post]:
+        query = self.client.table("posts").select("*")
+        if status:
+            query = query.eq("status", status)
+        if channel:
+            query = query.contains("channels", [channel])
+        if q:
+            like = f"%{q}%"
+            query = query.or_(f"title.ilike.{like},summary.ilike.{like},body.ilike.{like}")
+        result = (
+            query.order("updated_at", desc=True).range(offset, offset + limit - 1).execute()
+        )
+        return [self._to_post(row) for row in (result.data or [])]
+
+    def get_post(self, post_id: UUID) -> Post | None:
+        result = (
+            self.client.table("posts").select("*").eq("id", str(post_id)).limit(1).execute()
+        )
+        if not result.data:
+            return None
+        return self._to_post(result.data[0])
+
+    def create_post(self, post: Post) -> Post:
+        payload = _dump(
+            post.model_dump(mode="json", exclude={"id", "created_at", "updated_at"})
+        )
+        result = self.client.table("posts").insert(payload).execute()
+        created = self._to_post(result.data[0])
+        self._insert_progress(
+            ProgressEntityType.POST,
+            created.id,  # type: ignore[arg-type]
+            created.status.value,
+            post.notes,
+        )
+        return created
+
+    def update_post(self, post_id: UUID, fields: dict[str, Any]) -> Post:
+        if not self.get_post(post_id):
+            raise KeyError(f"post not found: {post_id}")
+        payload = _dump(fields)
+        if not payload:
+            found = self.get_post(post_id)
+            assert found is not None
+            return found
+        result = self.client.table("posts").update(payload).eq("id", str(post_id)).execute()
+        return self._to_post(result.data[0])
+
+    def submit_post_progress(
+        self, post_id: UUID, status: PostStatus, note: str | None = None
+    ) -> ProgressEvent:
+        current = self.get_post(post_id)
+        if current is None:
+            raise KeyError(f"post not found: {post_id}")
+        update: dict[str, Any] = {"status": status.value}
+        if note:
+            update["notes"] = note
+        if status == PostStatus.PUBLISHED and not current.published_at:
+            update["published_at"] = _now()
+        self.client.table("posts").update(update).eq("id", str(post_id)).execute()
+        return self._insert_progress(ProgressEntityType.POST, post_id, status.value, note)
+
     # --- progress / dashboard ----------------------------------------------
 
     def list_progress(
@@ -422,20 +531,27 @@ class Store:
     def dashboard(self) -> dict[str, Any]:
         jobs = self.client.table("jobs").select("status").execute().data or []
         prospects = self.client.table("prospects").select("status").execute().data or []
+        posts = self.client.table("posts").select("status").execute().data or []
         job_counts: dict[str, int] = {}
         prospect_counts: dict[str, int] = {}
+        post_counts: dict[str, int] = {}
         for row in jobs:
             key = str(row.get("status") or "unknown")
             job_counts[key] = job_counts.get(key, 0) + 1
         for row in prospects:
             key = str(row.get("status") or "unknown")
             prospect_counts[key] = prospect_counts.get(key, 0) + 1
+        for row in posts:
+            key = str(row.get("status") or "unknown")
+            post_counts[key] = post_counts.get(key, 0) + 1
         recent = self.list_progress(limit=20)
         return {
             "jobs_total": len(jobs),
             "prospects_total": len(prospects),
+            "posts_total": len(posts),
             "jobs_by_status": job_counts,
             "prospects_by_status": prospect_counts,
+            "posts_by_status": post_counts,
             "recent_progress": dump_progress_with_labels(recent, self._progress_labels(recent)),
         }
 
@@ -451,6 +567,11 @@ class Store:
             str(event.entity_id)
             for event in events
             if event.entity_type == ProgressEntityType.PROSPECT
+        ]
+        post_ids = [
+            str(event.entity_id)
+            for event in events
+            if event.entity_type == ProgressEntityType.POST
         ]
         labels: dict[str, tuple[str | None, str | None]] = {}
         if job_ids:
@@ -474,6 +595,22 @@ class Store:
             )
             for row in result.data or []:
                 labels[str(row["id"])] = (row.get("name"), row.get("company"))
+        if post_ids:
+            result = (
+                self.client.table("posts")
+                .select("id, title, channels")
+                .in_("id", post_ids)
+                .execute()
+            )
+            for row in result.data or []:
+                channels = row.get("channels") or []
+                if isinstance(channels, str):
+                    try:
+                        channels = json.loads(channels)
+                    except json.JSONDecodeError:
+                        channels = []
+                subtitle = " · ".join(channels) if channels else None
+                labels[str(row["id"])] = (row.get("title"), subtitle)
         return labels
 
     def _insert_progress(

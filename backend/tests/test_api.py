@@ -14,6 +14,8 @@ from jobintel.config import get_settings
 from jobintel.models import (
     JobRead,
     JobStatus,
+    Post,
+    PostStatus,
     ProgressEntityType,
     ProgressEvent,
     Prospect,
@@ -25,6 +27,7 @@ class FakeStore:
     def __init__(self) -> None:
         self.jobs: dict[UUID, JobRead] = {}
         self.prospects: dict[UUID, Prospect] = {}
+        self.posts: dict[UUID, Post] = {}
         self.events: list[ProgressEvent] = []
 
     def dashboard(self) -> dict[str, Any]:
@@ -35,11 +38,17 @@ class FakeStore:
         for prospect in self.prospects.values():
             if prospect.id is not None:
                 labels[str(prospect.id)] = (prospect.name, prospect.company)
+        for post in self.posts.values():
+            if post.id is not None:
+                subtitle = " · ".join(channel.value for channel in post.channels) or None
+                labels[str(post.id)] = (post.title, subtitle)
         return {
             "jobs_total": len(self.jobs),
             "prospects_total": len(self.prospects),
+            "posts_total": len(self.posts),
             "jobs_by_status": {"new": len(self.jobs)},
             "prospects_by_status": {"new": len(self.prospects)},
+            "posts_by_status": {"idea": len(self.posts)},
             "recent_progress": dump_progress_with_labels(self.events[:20], labels),
         }
 
@@ -136,6 +145,43 @@ class FakeStore:
             id=uuid4(),
             entity_type=ProgressEntityType.PROSPECT,
             entity_id=prospect_id,
+            status=status.value,
+            note=note,
+            created_at=datetime.now(UTC),
+        )
+        self.events.append(event)
+        return event
+
+    def list_posts(self, **_: Any) -> list[Post]:
+        return list(self.posts.values())
+
+    def get_post(self, post_id: UUID) -> Post | None:
+        return self.posts.get(post_id)
+
+    def create_post(self, post: Post) -> Post:
+        created = post.model_copy(update={"id": uuid4()})
+        assert created.id is not None
+        self.posts[created.id] = created
+        return created
+
+    def update_post(self, post_id: UUID, fields: dict[str, Any]) -> Post:
+        current = self.posts[post_id]
+        updated = current.model_copy(update=fields)
+        self.posts[post_id] = updated
+        return updated
+
+    def submit_post_progress(
+        self, post_id: UUID, status: PostStatus, note: str | None = None
+    ) -> ProgressEvent:
+        current = self.posts[post_id]
+        updates: dict[str, Any] = {"status": status}
+        if status == PostStatus.PUBLISHED and not current.published_at:
+            updates["published_at"] = datetime.now(UTC)
+        self.posts[post_id] = current.model_copy(update=updates)
+        event = ProgressEvent(
+            id=uuid4(),
+            entity_type=ProgressEntityType.POST,
+            entity_id=post_id,
             status=status.value,
             note=note,
             created_at=datetime.now(UTC),
@@ -357,4 +403,82 @@ def test_invalid_job_status(client: TestClient) -> None:
         json={"status": "nope"},
     )
     assert response.status_code == 400
+
+
+def test_create_post_and_progress(client: TestClient) -> None:
+    created = client.post(
+        "/api/posts",
+        headers=_auth(),
+        json={
+            "title": "How I track remote work",
+            "summary": "Pipeline notes",
+            "body": "Jobs, prospects, and posts.",
+            "tags": ["career", "freelance"],
+            "channels": ["web", "linkedin"],
+            "web_url": "https://tyorus.com/notes/remote-work",
+            "linkedin_url": "https://www.linkedin.com/feed/update/urn:li:activity:1",
+            "cover_url": "https://tyorus.com/cover.png",
+            "media_json": [
+                {
+                    "kind": "image",
+                    "url": "https://tyorus.com/cover.png",
+                    "caption": "Hero",
+                }
+            ],
+        },
+    )
+    assert created.status_code == 201
+    body = created.json()
+    assert body["status"] == "idea"
+    assert body["channels"] == ["web", "linkedin"]
+    assert body["web_url"].endswith("/remote-work")
+    assert body["media_json"][0]["kind"] == "image"
+    post_id = body["id"]
+
+    patched = client.patch(
+        f"/api/posts/{post_id}",
+        headers=_auth(),
+        json={"canonical_url": "https://tyorus.com/notes/remote-work"},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["canonical_url"].endswith("/remote-work")
+
+    progress = client.post(
+        f"/api/posts/{post_id}/progress",
+        headers=_auth(),
+        json={"status": "published", "note": "Live on web and LinkedIn"},
+    )
+    assert progress.status_code == 201
+    assert progress.json()["status"] == "published"
+    fetched = client.get(f"/api/posts/{post_id}", headers=_auth())
+    assert fetched.json()["status"] == "published"
+    assert fetched.json()["published_at"]
+    listed = client.get("/api/posts?channel=linkedin", headers=_auth())
+    assert listed.json()[0]["title"] == "How I track remote work"
+    board = client.get("/api/dashboard", headers=_auth())
+    assert board.json()["posts_total"] == 1
+    recent = board.json()["recent_progress"]
+    assert recent[0]["title"] == "How I track remote work"
+    assert recent[0]["entity_type"] == "post"
+
+
+def test_invalid_post_status(client: TestClient) -> None:
+    created = client.post(
+        "/api/posts",
+        headers=_auth(),
+        json={"title": "Draft note"},
+    )
+    post_id = created.json()["id"]
+    response = client.post(
+        f"/api/posts/{post_id}/progress",
+        headers=_auth(),
+        json={"status": "nope"},
+    )
+    assert response.status_code == 400
+    missing = client.get(
+        "/api/posts/00000000-0000-0000-0000-000000000000",
+        headers=_auth(),
+    )
+    assert missing.status_code == 404
+
 
