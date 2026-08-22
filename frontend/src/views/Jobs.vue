@@ -24,12 +24,12 @@
     <form
       v-if="showForm"
       class="card form-card"
-      style="margin: 1rem 0"
       :aria-busy="saving"
       @submit.prevent="createJob"
     >
       <h2>Manual job (LinkedIn OK)</h2>
       <fieldset :disabled="saving" class="form-fields">
+      <div class="form-body">
       <div class="form-grid">
         <label>Title <input v-model="form.title" required /></label>
         <label>Company <input v-model="form.company_name" /></label>
@@ -70,11 +70,12 @@
           <textarea v-model="form.notes" placeholder="Optional: why this role, when you saw it" />
         </label>
       </div>
-      <div class="row" style="margin-top: 0.8rem">
+      <div class="form-actions">
         <button type="submit">
           {{ saving ? "Saving…" : "Save job" }}
         </button>
         <span v-if="formError" class="flash">{{ formError }}</span>
+      </div>
       </div>
       </fieldset>
     </form>

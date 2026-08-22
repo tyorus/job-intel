@@ -10,52 +10,58 @@
       </button>
     </div>
 
-    <form v-if="showForm" class="card" style="margin: 1rem 0" @submit.prevent="createPost">
+    <form v-if="showForm" class="card form-card" @submit.prevent="createPost">
       <h2>New post</h2>
-      <div class="form-grid">
-        <label>Title <input v-model="form.title" required /></label>
-        <label>
-          Status
-          <select v-model="form.status">
-            <option v-for="item in POST_STATUSES" :key="item" :value="item">{{ labelize(item) }}</option>
-          </select>
-        </label>
-        <label class="span-2">Summary <input v-model="form.summary" /></label>
-        <label class="span-2">Body <textarea v-model="form.body" rows="6" /></label>
-        <label>Tags <input v-model="form.tags" placeholder="career, freelance" /></label>
-        <label>Cover URL <input v-model="form.cover_url" type="url" /></label>
-        <label>Canonical URL <input v-model="form.canonical_url" type="url" /></label>
-        <label>Scheduled <input v-model="form.scheduled_at" type="datetime-local" /></label>
-        <fieldset class="span-2">
-          <legend>Publish to</legend>
-          <div class="row">
-            <label v-for="item in POST_CHANNELS" :key="item" class="inline">
-              <input v-model="form.channels" type="checkbox" :value="item" />
-              {{ labelize(item) }}
-            </label>
+      <div class="form-body">
+        <div class="form-grid">
+          <label>Title <input v-model="form.title" required /></label>
+          <label>
+            Status
+            <select v-model="form.status">
+              <option v-for="item in POST_STATUSES" :key="item" :value="item">{{ labelize(item) }}</option>
+            </select>
+          </label>
+          <label class="span-2">Summary <input v-model="form.summary" /></label>
+          <label class="span-2">Body <textarea v-model="form.body" rows="6" /></label>
+          <label>Tags <input v-model="form.tags" placeholder="career, freelance" /></label>
+          <label>Cover URL <input v-model="form.cover_url" type="url" /></label>
+          <label>Canonical URL <input v-model="form.canonical_url" type="url" /></label>
+          <label>Scheduled <input v-model="form.scheduled_at" type="datetime-local" /></label>
+          <fieldset class="span-2">
+            <legend>Publish to</legend>
+            <div class="row">
+              <label v-for="item in POST_CHANNELS" :key="item" class="inline">
+                <input v-model="form.channels" type="checkbox" :value="item" />
+                {{ labelize(item) }}
+              </label>
+            </div>
+          </fieldset>
+          <label>Web URL <input v-model="form.web_url" type="url" /></label>
+          <label>LinkedIn URL <input v-model="form.linkedin_url" type="url" /></label>
+          <label class="span-2">Notes <textarea v-model="form.notes" /></label>
+        </div>
+
+        <section class="form-section">
+          <h3 class="form-section-title">Media</h3>
+          <div class="form-media-list">
+            <div v-for="(item, index) in form.media" :key="index" class="form-media-row form-grid">
+              <label>
+                Kind
+                <select v-model="item.kind">
+                  <option v-for="kind in MEDIA_KINDS" :key="kind" :value="kind">{{ labelize(kind) }}</option>
+                </select>
+              </label>
+              <label>URL <input v-model="item.url" type="url" /></label>
+              <label class="span-2">Caption <input v-model="item.caption" /></label>
+            </div>
           </div>
-        </fieldset>
-        <label>Web URL <input v-model="form.web_url" type="url" /></label>
-        <label>LinkedIn URL <input v-model="form.linkedin_url" type="url" /></label>
-        <label class="span-2">Notes <textarea v-model="form.notes" /></label>
-      </div>
+          <button type="button" class="secondary" @click="addMedia">Add media</button>
+        </section>
 
-      <h3 style="margin: 1rem 0 0.5rem">Media</h3>
-      <div v-for="(item, index) in form.media" :key="index" class="form-grid" style="margin-bottom: 0.6rem">
-        <label>
-          Kind
-          <select v-model="item.kind">
-            <option v-for="kind in MEDIA_KINDS" :key="kind" :value="kind">{{ labelize(kind) }}</option>
-          </select>
-        </label>
-        <label>URL <input v-model="item.url" type="url" /></label>
-        <label class="span-2">Caption <input v-model="item.caption" /></label>
-      </div>
-      <button type="button" class="secondary" @click="addMedia">Add media</button>
-
-      <div class="row" style="margin-top: 0.8rem">
-        <button type="submit">Save post</button>
-        <span v-if="formError" class="flash">{{ formError }}</span>
+        <div class="form-actions">
+          <button type="submit">Save post</button>
+          <span v-if="formError" class="flash">{{ formError }}</span>
+        </div>
       </div>
     </form>
 

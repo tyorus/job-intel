@@ -1,6 +1,7 @@
 <template>
-  <form class="card" @submit.prevent="submit">
+  <form class="card form-card" @submit.prevent="submit">
     <h2>Submit progress</h2>
+    <div class="form-body">
     <div class="form-grid">
       <label>
         Status
@@ -13,13 +14,14 @@
         <textarea v-model="note" placeholder="What changed, where you applied, next step…" />
       </label>
     </div>
-    <div class="row" style="margin-top: 0.8rem">
+    <div class="form-actions">
       <button type="submit" :disabled="busy">
         {{ busy ? "Saving…" : "Save update" }}
       </button>
       <span v-if="busy" class="muted" aria-live="polite">Saving changes…</span>
       <span v-else-if="saved" class="ok" aria-live="polite">Saved.</span>
       <span v-else-if="error" class="flash">{{ error }}</span>
+    </div>
     </div>
   </form>
 </template>

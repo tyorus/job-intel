@@ -6,7 +6,7 @@
       Enter the tracker API key. Jobs from public boards land hourly; LinkedIn roles and
       client prospects are logged by hand.
     </p>
-    <form class="form-grid" style="margin-top: 1rem" @submit.prevent="unlock">
+    <form class="form-grid" @submit.prevent="unlock">
       <label class="span-2">
         API key
         <input v-model="key" type="password" autocomplete="current-password" required />

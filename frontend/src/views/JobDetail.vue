@@ -5,7 +5,7 @@
     </p>
     <h1>{{ job.title }}</h1>
     <p class="muted">{{ job.company_name || "Unknown company" }} · {{ job.location || "—" }}</p>
-    <div class="row" style="margin: 0.6rem 0 1rem">
+    <div class="row">
       <StatusPill :value="job.status" />
       <span class="pill">{{ job.source }}</span>
       <span v-if="job.remote_type" class="pill">{{ labelize(job.remote_type) }}</span>
@@ -29,7 +29,7 @@
       </button>
     </div>
 
-    <article class="card" style="margin-bottom: 1rem">
+    <article class="card">
       <h2>Listing metadata</h2>
       <div class="meta-grid">
         <div>
@@ -73,17 +73,18 @@
           <p class="mono">{{ job.source_job_id || "—" }}</p>
         </div>
       </div>
-      <div v-if="(job.tags || []).length" class="row" style="margin-top: 0.8rem">
+      <div v-if="(job.tags || []).length" class="row">
         <span v-for="tag in job.tags" :key="tag" class="pill">{{ tag }}</span>
       </div>
-      <details v-if="hasExtraMeta" style="margin-top: 0.9rem">
+      <details v-if="hasExtraMeta">
         <summary class="muted">Source extras</summary>
         <pre class="mono meta-json">{{ prettyMeta }}</pre>
       </details>
     </article>
 
-    <form class="card" style="margin-bottom: 1rem" @submit.prevent="saveMeta">
+    <form class="card form-card" @submit.prevent="saveMeta">
       <h2>Edit dates &amp; metadata</h2>
+      <div class="form-body">
       <div class="form-grid">
         <label>Listed on <input v-model="edit.posted_at" type="date" /></label>
         <label>Deadline <input v-model="edit.deadline_at" type="date" /></label>
@@ -94,7 +95,7 @@
         <label class="span-2">Tags <input v-model="edit.tags" placeholder="comma separated" /></label>
         <label class="span-2">Apply URL <input v-model="edit.apply_url" type="url" /></label>
       </div>
-      <div class="row" style="margin-top: 0.8rem">
+      <div class="form-actions">
         <button type="submit" :disabled="saving">
           {{ saving ? "Saving…" : "Save metadata" }}
         </button>
@@ -102,11 +103,12 @@
         <span v-else-if="metaSaved" class="ok" aria-live="polite">Saved.</span>
         <span v-else-if="metaError" class="flash">{{ metaError }}</span>
       </div>
+      </div>
     </form>
 
     <ProgressForm :statuses="JOB_STATUSES" :current="job.status" :save="onProgress" />
 
-    <article class="card" style="margin: 1rem 0">
+    <article class="card">
       <h2>Timeline</h2>
       <div class="timeline">
         <div v-for="event in events" :key="event.id" class="event">

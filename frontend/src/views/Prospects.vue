@@ -10,8 +10,9 @@
       </button>
     </div>
 
-    <form v-if="showForm" class="card" style="margin: 1rem 0" @submit.prevent="createProspect">
+    <form v-if="showForm" class="card form-card" @submit.prevent="createProspect">
       <h2>New prospect</h2>
+      <div class="form-body">
       <div class="form-grid">
         <label>Name <input v-model="form.name" required /></label>
         <label>Company <input v-model="form.company" /></label>
@@ -30,9 +31,10 @@
         <label class="span-2">Next action <input v-model="form.next_action" /></label>
         <label class="span-2">Notes <textarea v-model="form.notes" /></label>
       </div>
-      <div class="row" style="margin-top: 0.8rem">
+      <div class="form-actions">
         <button type="submit">Save prospect</button>
         <span v-if="formError" class="flash">{{ formError }}</span>
+      </div>
       </div>
     </form>
 

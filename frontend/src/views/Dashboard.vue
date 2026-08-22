@@ -3,7 +3,7 @@
     <h1>Board</h1>
     <p class="muted">Hourly public scrape, client prospects, and article publishes.</p>
     <div v-if="error" class="flash">{{ error }}</div>
-    <div class="grid-stats" style="margin: 1rem 0 1.4rem">
+    <div class="grid-stats">
       <article class="card">
         <p class="mono muted">Jobs</p>
         <h2>{{ data.jobs_total || 0 }}</h2>
@@ -30,7 +30,7 @@
       </article>
     </div>
 
-    <div class="card" style="margin-bottom: 1rem">
+    <div class="card">
       <h2>Jobs by status</h2>
       <div class="row">
         <span v-for="(count, status) in data.jobs_by_status || {}" :key="status" class="pill" :class="status">
@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <div class="card" style="margin-bottom: 1rem">
+    <div class="card">
       <h2>Prospects by status</h2>
       <div class="row">
         <span v-for="(count, status) in data.prospects_by_status || {}" :key="status" class="pill" :class="status">
@@ -50,7 +50,7 @@
       </div>
     </div>
 
-    <div class="card" style="margin-bottom: 1rem">
+    <div class="card">
       <h2>Posts by status</h2>
       <div class="row">
         <span v-for="(count, status) in data.posts_by_status || {}" :key="status" class="pill" :class="status">

@@ -5,7 +5,7 @@
     </p>
     <h1>{{ row.name }}</h1>
     <p class="muted">{{ row.company || "—" }} · {{ row.role || "no role" }} · {{ row.country || "" }}</p>
-    <div class="row" style="margin: 0.6rem 0 1rem">
+    <div class="row">
       <StatusPill :value="row.status" />
       <StatusPill :value="row.package" />
       <span v-if="row.value_estimate_usd" class="mono">${{ row.value_estimate_usd }}</span>
@@ -19,7 +19,7 @@
       </button>
     </div>
 
-    <article class="card" style="margin-bottom: 1rem">
+    <article class="card">
       <h2>Details</h2>
       <p><strong>Channel</strong> · {{ row.channel || "—" }}</p>
       <p><strong>Pain</strong> · {{ row.potential_problem || "—" }}</p>
@@ -30,7 +30,7 @@
 
     <ProgressForm :statuses="PROSPECT_STATUSES" :current="row.status" :save="onProgress" />
 
-    <article class="card" style="margin-top: 1rem">
+    <article class="card">
       <h2>Timeline</h2>
       <div class="timeline">
         <div v-for="event in events" :key="event.id" class="event">
